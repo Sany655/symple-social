@@ -1,11 +1,11 @@
 import '../styles/globals.css'
 import "bootstrap/dist/css/bootstrap.min.css"
 import { Provider } from 'react-redux'
-import store from './redux/store'
-import "./firebase"
-import StateChange from './redux/StateChange'
+import "../firebase"
 import Header from '../components/Header'
 import { useEffect } from 'react'
+import store from '../redux/store'
+import StateChange from '../redux/StateChange'
 
 function MyApp({ Component, pageProps }) {
 

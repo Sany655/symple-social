@@ -1,7 +1,7 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
-import Spinner from '../../components/Spinner';
+import Spinner from '../components/Spinner';
 const StateChange = ({ children }) => {
     const auth = getAuth()
     const [loading, setLoading] = useState(true)
