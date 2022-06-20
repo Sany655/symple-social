@@ -2,11 +2,22 @@ import React, { useEffect, useRef, useState } from 'react'
 import withProtected from './middlewares/withProtected'
 import { useSelector } from 'react-redux'
 import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, orderBy, query, serverTimestamp } from 'firebase/firestore'
+import Spinner from '../components/Spinner'
 const Notes = () => {
     const [notes, setNotes] = useState([])
     const [text, setText] = useState('')
     const [tag, setTag] = useState('')
+    const [loading, setLoading] = useState(true)
     const user = useSelector(state => state.auth).user
+
+    const searchNote = (e) => {
+        const text = e.target.value
+        if (text.length>1) {
+            setNotes(notes.filter(note => (note.text.includes(text)||note.tag.includes(text))));
+        }else if(text.length === 0){
+            setLoading(true)
+        }
+    }
 
     useEffect(() => {
         onSnapshot(query(collection(getFirestore(), 'notes', user.uid, 'note'), orderBy('timestamp', 'desc')), (snapshot) => {
@@ -17,8 +28,9 @@ const Notes = () => {
                 timestamp: String(doc.data().timestamp?.toDate().toLocaleTimeString()) + ' - ' + String(doc.data().timestamp?.toDate().toLocaleDateString()),
                 updatedAt: String(doc.data().updatedAt?.toDate().toLocaleTimeString()) + ' - ' + String(doc.data().updatedAt?.toDate().toLocaleDateString())
             })))
+            setLoading(false)
         });
-    }, [user.uid])
+    }, [user.uid,loading])
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -47,6 +59,11 @@ const Notes = () => {
         <div className="container">
             <div className="d-flex align-items-center justify-content-between mt-5">
                 <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
+                <div className="row">
+                    <div className="col">
+                        <input onChange={searchNote} type="text" className="form-control" placeholder='Search'/>
+                    </div>
+                </div>
             </div>
             <div className="modal fade" id="addNoteModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div className="modal-dialog">
@@ -68,18 +85,19 @@ const Notes = () => {
                     </div>
                 </div>
             </div>
-
+            {loading && <Spinner />}
             <div className="row my-4">
                 {
                     notes.map(note => (
-                        <div key={note.id} className="col-md-4">
+                        <div key={note.id} className="col-md-4 mb-5">
                             <div className="card">
-                                <div className="card-body">
+                                <div className="card-body overflow-auto" style={{ height: "250px" }}>
                                     <p>{note.tag}</p>
+                                    <p>{note.timestamp}</p>
                                     <hr />
                                     <p>{note.text}</p>
-                                    <hr />
-                                    <p>{note.timestamp}</p>
+                                </div>
+                                <div className="card-footer">
                                     <button className="btn btn-danger btn-sm" onClick={() => deleteNote(note.id)}>Delete</button>
                                 </div>
                             </div>
