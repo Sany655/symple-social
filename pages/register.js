@@ -1,7 +1,6 @@
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import Router from "next/router";
 import { useState } from "react";
-import useFirebase from "./firebase";
 import withPublic from "./middlewares/withPublic";
 
 const Register = () => {
