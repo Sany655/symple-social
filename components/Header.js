@@ -1,6 +1,6 @@
 import { getAuth, signOut } from 'firebase/auth'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import Image from 'next/image'
 import React from 'react'
 import { useSelector } from "react-redux"
 
@@ -52,10 +52,10 @@ const Header = () => {
                             <button className="btn btn-outline-success" type="submit">Search</button>
                         </form>
                         {
-                            // auth && <button className="btn btn-primary" onClick={() => signOut(getAuth()).then().catch(err => console.log(err))}>logout</button>
                             auth && <div className='dropdown'>
                                 <a className="nav-link" href="#" id="dropdownMenuButton1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img src={auth.pic} alt="" className='rounded-circle border' width="45px" height={"45px"} />
+                                    {/* <img src={auth.pic} alt="" className='rounded-circle border' width="45px" height={"45px"} /> */}
+                                    <Image src={auth.pic} alt="" className='rounded-circle border' width="45px" height={"45px"} />
                                 </a>
                                 <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                                     <li className='px-4'>{auth.name || "Name"}</li>

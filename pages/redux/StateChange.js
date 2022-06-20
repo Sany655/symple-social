@@ -23,7 +23,7 @@ const StateChange = ({ children }) => {
             }
             setLoading(false)
         })
-    }, [auth])
+    }, [auth,dispatch])
 
     if (loading) {
         return <Spinner />
