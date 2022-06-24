@@ -23,16 +23,13 @@ const Header = () => {
                                             <Link href={"/"}><a className="nav-link">Home</a></Link>
                                         </li>
                                         <li className="nav-item">
-                                            <Link href={"/blog"}><a className="nav-link">Blog</a></Link>
-                                        </li>
-                                        <li className="nav-item">
-                                            <Link href={"/feed"}><a className="nav-link">Feed</a></Link>
-                                        </li>
-                                        <li className="nav-item">
-                                            <Link href={"/inbox"}><a className="nav-link">Inbox</a></Link>
-                                        </li>
-                                        <li className="nav-item">
                                             <Link href={"/notes"}><a className="nav-link">Notes</a></Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link href={"/friend"}><a className="nav-link">Friends</a></Link>
+                                        </li>
+                                        <li className="nav-item">
+                                            <Link href={"/people"}><a className="nav-link">Peoples</a></Link>
                                         </li>
                                     </>
                                 ) : (
@@ -54,7 +51,7 @@ const Header = () => {
                         {
                             auth && <div className='dropdown'>
                                 <a className="nav-link" href="#" id="dropdownMenuButton1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <Image src={auth.pic} alt="" className='rounded-circle border' width="45px" height={"45px"} />
+                                    <Image src={auth.pic?auth.pic:"/default_user.png"} alt="" className='rounded-circle border' width="45px" height={"45px"} />
                                 </a>
                                 <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                                     <li className='px-4'>{auth.name || "Name"}</li>

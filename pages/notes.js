@@ -12,7 +12,7 @@ const Notes = () => {
 
     const searchNote = (e) => {
         const text = e.target.value
-        if (text.length>1) {
+        if (text.length>0) {
             setNotes(notes.filter(note => (note.text.includes(text)||note.tag.includes(text))));
         }else if(text.length === 0){
             setLoading(true)

@@ -1,12 +1,13 @@
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { addDoc, collection, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 import Router from "next/router";
 import { useState } from "react";
 import withPublic from "./middlewares/withPublic";
 
 const Register = () => {
     const [form, setForm] = useState({
-        email: "",
-        password: "",
+        email: "asd@asd.com",
+        password: "asdasd",
         error: ""
     })
     const register = e => {
@@ -16,10 +17,16 @@ const Register = () => {
                 .then((userCredential) => {
                     // Signed in 
                     const user = userCredential.user;
-                    Router.replace("/")
+                    setDoc(doc(getFirestore(),"users",user.uid),{
+                        uid:user.uid,
+                        email:user.email,
+                        displayName:user.displayName,
+                        photoURL:user.photoURL,
+                        phoneNumber:user.phoneNumber,
+                        timestamp:serverTimestamp()
+                    }).catch(err => console.log(err.message))
                 })
                 .catch((error) => {
-                    const errorCode = error.code;
                     const errorMessage = error.message;
                     setForm({ ...form, error: errorMessage })
                 });

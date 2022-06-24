@@ -11,7 +11,7 @@ const StateChange = ({ children }) => {
             if (user) {
                 dispatch({
                     type: "auth-check", payload: {
-                        uid:user.uid,
+                        uid: user.uid,
                         name: user.displayName,
                         email: user.email,
                         pic: user.photoURL,
@@ -23,7 +23,7 @@ const StateChange = ({ children }) => {
             }
             setLoading(false)
         })
-    }, [auth,dispatch])
+    }, [auth, dispatch])
 
     if (loading) {
         return <Spinner />
