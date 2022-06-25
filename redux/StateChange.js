@@ -1,4 +1,5 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { doc, getFirestore, setDoc, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import Spinner from '../components/Spinner';
@@ -9,6 +10,18 @@ const StateChange = ({ children }) => {
     useEffect(() => {
         onAuthStateChanged(auth, user => {
             if (user) {
+                if (typeof window !== "undefined") {
+                    localStorage.setItem("user", JSON.stringify({
+                        uid: user.uid,
+                        name: user.displayName,
+                        email: user.email,
+                        pic: user.photoURL,
+                        phone: user.phoneNumber
+                    }))
+                }
+                updateDoc(doc(getFirestore(), "users", user.uid), {
+                    active: true
+                })
                 dispatch({
                     type: "auth-check", payload: {
                         uid: user.uid,
@@ -19,6 +32,12 @@ const StateChange = ({ children }) => {
                     }
                 })
             } else {
+                if (typeof window !== "undefined") {
+                    const user = JSON.parse(localStorage.getItem("user"))
+                    updateDoc(doc(getFirestore(), "users", user.uid), {
+                        active: false
+                    })
+                }
                 dispatch({ type: "auth-check", payload: null })
             }
             setLoading(false)

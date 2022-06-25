@@ -16,6 +16,7 @@ const FetchData = ({ children }) => {
                         fndP.status = doc.data().status;
                         fndP.createdAt = doc.data().createdAt;
                         fndP.createdBy = doc.data().createdBy;
+                        fndP.chatId = doc.id;
                         return fndP;
                     })
                 ).then(res => {
@@ -57,14 +58,6 @@ const FetchData = ({ children }) => {
             if (user.exists()) {
                 data = user.data();
             }
-
-            onSnapshot(collection(getFirestore(), "chats", id, "messages"),
-                snapshot => {
-                    data.messages = snapshot.docs.map(doc => {
-                        doc.data().id = doc.id
-                        return doc.data()
-                    })
-                })
 
             return data;
         } catch (error) {
