@@ -12,8 +12,7 @@ const FetchData = ({ children }) => {
             onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid)), async (snapshot) => {
                 Promise.all(
                     snapshot.docs.map(async (doc) => {
-                        const fndP = await getUser(doc.data().members.filter(member => member !== user.uid)[0],doc.id)
-                        // fndP.messages = chats;
+                        const fndP = await getUser(doc.data().members.filter(member => member !== user.uid)[0], doc.id)
                         fndP.status = doc.data().status;
                         fndP.createdAt = doc.data().createdAt;
                         fndP.createdBy = doc.data().createdBy;
@@ -30,7 +29,6 @@ const FetchData = ({ children }) => {
                             pendings.push(frnd)
                         } else {
                             lists.push(frnd)
-                            console.log(frnd);
                         }
                     })
                     dispatch({ type: "get-friends", payload: lists })
@@ -51,27 +49,28 @@ const FetchData = ({ children }) => {
         }
     }, [user])
 
-    const getUser = async (uid,id) => {
+    const getUser = async (uid, id) => {
         try {
+            let data = {};
             const user = await getDoc(doc(getFirestore(), "users", uid))
-            // const chat = await getChat(doc.id)
-            // console.log(chat);
+
             if (user.exists()) {
-                return user.data();
+                data = user.data();
             }
+
+            onSnapshot(collection(getFirestore(), "chats", id, "messages"),
+                snapshot => {
+                    data.messages = snapshot.docs.map(doc => {
+                        doc.data().id = doc.id
+                        return doc.data()
+                    })
+                })
+
+            return data;
         } catch (error) {
             console.log(error.message);
         }
     }
-
-    const getChat = async chatId => {
-        onSnapshot(collection(getFirestore(), "chats", chatId, "messages"),
-            snapshot => {
-                return snapshot.docs.map(doc => doc.data());
-            })
-    }
-
-
 
     return children
 }

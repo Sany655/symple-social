@@ -7,7 +7,7 @@ import { useSelector } from "react-redux"
 const Header = () => {
     const auth = useSelector(state => state.auth).user
     return (
-        <header>
+        <header style={{flex:"0 0 auto"}}>
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
                 <div className="container-fluid">
                     <a className="navbar-brand" href="#">Navbar</a>

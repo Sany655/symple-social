@@ -18,8 +18,10 @@ function MyApp({ Component, pageProps }) {
         <Provider store={store}>
             <StateChange>
                 <FetchData>
-                    <Header />
-                    <Component {...pageProps} />
+                    <div className="d-flex h-100 flex-column">
+                        <Header />
+                        <Component {...pageProps} />
+                    </div>
                 </FetchData>
             </StateChange>
         </Provider>

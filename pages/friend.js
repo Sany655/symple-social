@@ -1,13 +1,15 @@
-import { collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, setDoc, updateDoc, where } from 'firebase/firestore'
+import { deleteDoc, doc, getFirestore, updateDoc } from 'firebase/firestore'
 import Image from 'next/image'
-import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
-import Spinner from '../components/Spinner'
+import { useRouter } from 'next/router'
+import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import withProtected from './middlewares/withProtected'
 
 const friend = () => {
     const user = useSelector(state => state.auth).user
     const { list, pendings, requests } = useSelector(state => state.friends)
+    const router = useRouter()
+    const dispatch = useDispatch()
 
     const accept = (id) => {
         const chatId = id < user.uid ? id + user.uid : user.uid + id;
@@ -52,14 +54,17 @@ const friend = () => {
                                     <div className="card" key={friend.uid}>
                                         <div className="card-body d-flex align-items-center justify-content-between">
                                             <div className="d-flex align-items-center  gap-3">
-                                                <Image src={friend.photoURL ? friend.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"25px"} height="25px" />
+                                                <Image src={friend.photoURL ? friend.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"35px"} height="35px" />
                                                 <div className="">
-                                                    <p className='m-0'>{friend.displayName || friend.email}</p>
-                                                    {/* <p className="m-1">{friend.messages[0].message}</p> */}
+                                                    <h5 className='m-0'>{friend.displayName || friend.email}</h5>
+                                                    <p className="m-1">{friend.messages.length>0&&friend.messages[0].message}</p>
                                                 </div>
                                             </div>
                                             <div className="d-flex align-items-center gap-2">
-                                                <button className="btn btn-primary btn-sm">
+                                                <button className="btn btn-primary btn-sm" onClick={() => {
+                                                    dispatch({type:"get-chats",payload:friend})
+                                                    router.push("/inbox")
+                                                }}>
                                                     messages
                                                     <i className="bi bi-messenger ms-2"></i>
                                                 </button>
