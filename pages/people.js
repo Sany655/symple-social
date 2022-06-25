@@ -5,7 +5,7 @@ import axios from 'axios'
 import { addDoc, collection, doc, getDoc, getDocs, getFirestore, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import withProtected from './middlewares/withProtected'
 
-const people = () => {
+const People = () => {
     const user = useSelector(state => state.auth).user
     const { list } = useSelector(state => state.peoples)
 
@@ -59,4 +59,4 @@ const people = () => {
     )
 }
 
-export default withProtected(people)
+export default withProtected(People)

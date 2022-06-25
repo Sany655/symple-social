@@ -3,12 +3,10 @@ import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import withProtected from './middlewares/withProtected'
 
-const inbox = () => {
+const Inbox = () => {
     const { chats } = useSelector(state => state.inbox)
     const { user } = useSelector(state => state.auth)
-    useEffect(() => {
-        console.log(chats);
-    }, [])
+    
     return (
         <div className="container-fluid" style={{ flex: "1 1 auto" }}>
             <div className="row h-100">
@@ -52,4 +50,4 @@ const inbox = () => {
     )
 }
 
-export default withProtected(inbox)
+export default withProtected(Inbox)

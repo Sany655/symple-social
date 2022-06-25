@@ -5,7 +5,7 @@ import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import withProtected from './middlewares/withProtected'
 
-const friend = () => {
+const Friend = () => {
     const user = useSelector(state => state.auth).user
     const { list, pendings, requests } = useSelector(state => state.friends)
     const router = useRouter()
@@ -118,4 +118,4 @@ const friend = () => {
     )
 }
 
-export default withProtected(friend)
+export default withProtected(Friend)
