@@ -55,7 +55,7 @@ const Friend = () => {
                                     {
                                         list.filter(frnd => frnd.status === true).map(friend => (
                                             <div className="card" key={friend.uid}>
-                                                <div className="card-body d-flex align-items-center justify-content-between flex-column flex-md-row">
+                                                <div className="card-body d-flex align-items-center justify-content-between flex-column flex-sm-row gap-4">
                                                     <div className="d-flex align-items-center  gap-3">
                                                         <Image src={friend.photoURL ? friend.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"35px"} height="35px" />
                                                         <div className="d-flex align-items-center gap-3">
