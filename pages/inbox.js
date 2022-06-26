@@ -41,7 +41,7 @@ const Inbox = () => {
                     }))
                 })
         }
-    }, [inbox.uid])
+    }, [inbox.uid,inbox.chatId])
 
     return (
         <div className="container-fluid" style={{ flex: "1 1 auto" }}>

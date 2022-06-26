@@ -30,7 +30,7 @@ const Friend = () => {
             {
                 loading ? <Spinner /> : (
                     <div className="row">
-                        <div className="col-md-6 xl-3 m-auto">
+                        <div className="col-md-8 xl-3 m-auto">
                             <ul className="nav nav-pills mb-3 justify-content-around" id="pills-tab" role="tablist">
                                 <li className="nav-item" role="presentation">
                                     <button className="nav-link active" id="pills-Friends-tab" data-bs-toggle="pill" data-bs-target="#pills-Friends" type="button" role="tab" aria-controls="pills-Friends" aria-selected="true">Friends</button>
@@ -55,7 +55,7 @@ const Friend = () => {
                                     {
                                         list.filter(frnd => frnd.status === true).map(friend => (
                                             <div className="card" key={friend.uid}>
-                                                <div className="card-body d-flex align-items-center justify-content-between">
+                                                <div className="card-body d-flex align-items-center justify-content-between flex-column flex-md-row">
                                                     <div className="d-flex align-items-center  gap-3">
                                                         <Image src={friend.photoURL ? friend.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"35px"} height="35px" />
                                                         <div className="d-flex align-items-center gap-3">

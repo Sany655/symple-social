@@ -11,12 +11,18 @@ const FetchData = ({ children }) => {
         if (user) {
             onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid)), async (snapshot) => {
                 Promise.all(
-                    snapshot.docs.map(async (doc) => {
-                        const fndP = await getUser(doc.data().members.filter(member => member !== user.uid)[0], doc.id)
-                        fndP.status = doc.data().status;
-                        fndP.createdAt = doc.data().createdAt;
-                        fndP.createdBy = doc.data().createdBy;
-                        fndP.chatId = doc.id;
+                    snapshot.docs.map(async (chat) => {
+                        const fndP = await getUser(chat.data().members.filter(member => member !== user.uid)[0])
+                        // let fndP = {}
+
+                        // onSnapshot(doc(getFirestore(),"users",chat.data().members.filter(member => member !== user.uid)[0]),(snapUser) => {
+                        //     fndP = snapUser
+                        // })
+
+                        fndP.status = chat.data().status;
+                        fndP.createdAt = chat.data().createdAt;
+                        fndP.createdBy = chat.data().createdBy;
+                        fndP.chatId = chat.id;
                         return fndP;
                     })
                 ).then(res => {
