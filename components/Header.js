@@ -53,7 +53,7 @@ const Header = () => {
                                 <a className="nav-link" href="#" id="dropdownMenuButton1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <Image src={auth.pic?auth.pic:"/default_user.png"} alt="" className='rounded-circle border' width="45px" height={"45px"} />
                                 </a>
-                                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                                <ul style={{zIndex:100}} className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
                                     <li className='px-4'>{auth.name || "Name"}</li>
                                     <li className='px-4'>{auth.email || "Email"}</li>
                                     <li className='px-4'>{auth.phone || "Phone"}</li>

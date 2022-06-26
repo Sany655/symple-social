@@ -1,6 +1,5 @@
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, collection, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
-import Router from "next/router";
+import { addDoc, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 import { useState } from "react";
 import withPublic from "./middlewares/withPublic";
 
@@ -17,14 +16,14 @@ const Register = () => {
                 .then((userCredential) => {
                     // Signed in 
                     const user = userCredential.user;
-                    setDoc(doc(getFirestore(),"users",user.uid),{
+                    addDoc(doc(getFirestore(),"users",user.uid),{
                         uid:user.uid,
                         email:user.email,
                         displayName:user.displayName,
                         photoURL:user.photoURL,
                         phoneNumber:user.phoneNumber,
                         timestamp:serverTimestamp()
-                    }).catch(err => console.log(err.message))
+                    }).then(res => console.log(res)).catch(err => console.log(err.message))
                 })
                 .catch((error) => {
                     const errorMessage = error.message;

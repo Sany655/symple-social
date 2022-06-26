@@ -18,7 +18,7 @@ const People = () => {
                     createdAt: serverTimestamp(),
                     members: [user.uid, id],
                     status: false
-                }).then(res => console.log(res))
+                }).then(res => res)
             }
         }).catch(err => console.log(err.message))
 

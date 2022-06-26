@@ -1,4 +1,4 @@
-import { addDoc, collection, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
@@ -13,6 +13,7 @@ const Inbox = () => {
     const [text, setText] = useState("")
     const [chat, setChat] = useState([])
     const [ctld, setCtld] = useState(false)
+    const [friendProfile, setFriendProfile] = useState({})
 
     const sendMessage = (e) => {
         setCtld(true)
@@ -29,7 +30,7 @@ const Inbox = () => {
     }
 
     useEffect(() => {
-        if (!inbox.uid) {
+        if (!inbox.chatId) {
             router.push("/friend")
         } else {
             onSnapshot(collection(getFirestore(), "chats", inbox.chatId, "messages"),
@@ -40,8 +41,13 @@ const Inbox = () => {
                         return ct;
                     }))
                 })
+
+            onSnapshot(doc(getFirestore(), "users", inbox.members.find(fr => fr !== user.uid)),
+                snapshot => {
+                    setFriendProfile(snapshot.data());
+                })
         }
-    }, [inbox.uid,inbox.chatId])
+    }, [inbox.chatId,inbox.members,router,user.uid])
 
     return (
         <div className="container-fluid" style={{ flex: "1 1 auto" }}>
@@ -52,9 +58,9 @@ const Inbox = () => {
                             <div className="card-body h-100 d-flex flex-column">
                                 <div className="d-flex align-items-center justify-content-between mb-2">
                                     <div className="d-flex align-items-center gap-3">
-                                        <Image src={inbox.photoURL ? inbox.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"25px"} height="25px" />
-                                        <h5 className='m-0'>{inbox.displayName || inbox.email}</h5>
-                                        {inbox.active&&<i className='bg-success rounded-circle' style={{ width: "10px", height: "10px" }}></i>}
+                                        <Image src={friendProfile.photoURL ? friendProfile.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"25px"} height="25px" />
+                                        <h5 className='m-0'>{friendProfile.displayName || friendProfile.email}</h5>
+                                        {friendProfile.active && <i className='bg-success rounded-circle' style={{ width: "10px", height: "10px" }}></i>}
                                     </div>
                                     <div className="dropdown">
                                         <i className="bi bi-three-dots-vertical" role={"button"} data-bs-toggle="dropdown" aria-expanded="false"></i>
