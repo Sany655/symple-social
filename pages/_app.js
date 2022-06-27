@@ -7,7 +7,6 @@ import Header from '../components/Header'
 import { useEffect } from 'react'
 import store from '../redux/store'
 import StateChange from '../redux/StateChange'
-import FetchData from '../FetchData';
 
 function MyApp({ Component, pageProps }) {
 
@@ -17,12 +16,10 @@ function MyApp({ Component, pageProps }) {
     return (
         <Provider store={store}>
             <StateChange>
-                <FetchData>
-                    <div className="d-flex h-100 flex-column">
-                        <Header />
-                        <Component {...pageProps} />
-                    </div>
-                </FetchData>
+                <div className="d-flex h-100 flex-column">
+                    <Header />
+                    <Component {...pageProps} />
+                </div>
             </StateChange>
         </Provider>
     )

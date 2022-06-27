@@ -1,6 +1,7 @@
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, getFirestore, serverTimestamp, setDoc } from "firebase/firestore";
 import { useState } from "react";
+import SignWithGoogle from "../components/SignWithGoogle";
 import withPublic from "./middlewares/withPublic";
 
 const Register = () => {
@@ -16,7 +17,7 @@ const Register = () => {
                 .then((userCredential) => {
                     // Signed in 
                     const user = userCredential.user;
-                    addDoc(doc(getFirestore(),"users",user.uid),{
+                    setDoc(doc(getFirestore(),"users",user.uid),{
                         uid:user.uid,
                         email:user.email,
                         displayName:user.displayName,
@@ -52,11 +53,8 @@ const Register = () => {
                                 <label htmlFor="exampleInputPassword1" className="form-label">Password</label>
                                 <input type="password" className="form-control" id="exampleInputPassword1" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
                             </div>
-                            <div className="mb-3 form-check">
-                                <input type="checkbox" className="form-check-input" id="exampleCheck1" />
-                                <label className="form-check-label" htmlFor="exampleCheck1">Check me out</label>
-                            </div>
-                            <button type="submit" className="btn btn-primary">Submit</button>
+                            <button type="submit" className="btn btn-primary me-2">Submit</button>
+                            <SignWithGoogle setForm={setForm} form={form}/>
                         </form>
                     </div>
                 </div>

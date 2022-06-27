@@ -1,6 +1,6 @@
 import { getAuth, GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth"
-import { useRouter } from "next/router"
 import { useState } from "react"
+import SignWithGoogle from "../components/SignWithGoogle"
 import withPublic from "./middlewares/withPublic"
 const Login = () => {
     const [form, setForm] = useState({
@@ -8,31 +8,6 @@ const Login = () => {
         password: "asdasd",
         error: ""
     })
-
-    function loginWithGoogle() {
-        const provider = new GoogleAuthProvider();
-        const auth = getAuth();
-        signInWithPopup(auth, provider)
-            .then((result) => {
-                // This gives you a Google Access Token. You can use it to access the Google API.
-                const credential = GoogleAuthProvider.credentialFromResult(result);
-                const token = credential.accessToken;
-                // The signed-in user info.
-                const user = result.user;
-                console.log(user);
-                // ...
-            }).catch((error) => {
-                // Handle Errors here.
-                const errorCode = error.code;
-                const errorMessage = error.message;
-                // The email of the user's account used.
-                const email = error.customData.email;
-                // The AuthCredential type that was used.
-                const credential = GoogleAuthProvider.credentialFromError(error);
-                setForm({ ...form, error: errorMessage })
-                // ...
-            });
-    }
 
     const login = e => {
         e.preventDefault()
@@ -69,7 +44,7 @@ const Login = () => {
                                 <input type="password" className="form-control" id="exampleInputPassword1" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
                             </div>
                             <button type="submit" className="btn btn-primary me-2">Submit</button>
-                            <button type="button" className="btn btn-outline-success" onClick={loginWithGoogle}>Google</button>
+                            <SignWithGoogle setForm={setForm} form={form}/>
                         </form>
                     </div>
                 </div>

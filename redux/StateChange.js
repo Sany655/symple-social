@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { doc, getFirestore, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, getFirestore, setDoc, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux';
 import Spinner from '../components/Spinner';
@@ -19,8 +19,12 @@ const StateChange = ({ children }) => {
                         phone: user.phoneNumber
                     }))
                 }
-                updateDoc(doc(getFirestore(), "users", user.uid), {
-                    active: true
+                getDoc(doc(getFirestore(), "users", user.uid)).then(userRes => {
+                    if (userRes.exists()) {
+                        updateDoc(doc(getFirestore(), "users", user.uid), {
+                            active: true
+                        }).catch(err => console.log(err.message))
+                    }
                 })
                 dispatch({
                     type: "auth-check", payload: {
@@ -34,8 +38,12 @@ const StateChange = ({ children }) => {
             } else {
                 if (typeof window !== "undefined") {
                     const user = JSON.parse(localStorage.getItem("user"))
-                    updateDoc(doc(getFirestore(), "users", user.uid), {
-                        active: false
+                    getDoc(doc(getFirestore(), "users", user.uid)).then(userRes => {
+                        if (userRes.exists()) {
+                            updateDoc(doc(getFirestore(), "users", user.uid), {
+                                active: false
+                            }).catch(err => console.log(err.message))
+                        }
                     })
                 }
                 dispatch({ type: "auth-check", payload: null })

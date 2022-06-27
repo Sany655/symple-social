@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getFirestore, onSnapshot, serverTimestamp, setDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import React, { useEffect, useState } from 'react'
@@ -26,7 +26,14 @@ const Inbox = () => {
         }).then(() => {
             setText("")
             setCtld(false)
-        }).catch(err => console.log(err.message))
+        }).catch(err => console.log(err.message)).finally(() => {
+            updateDoc(doc(getFirestore(),"chats",inbox.chatId),{
+                lastMessage:serverTimestamp()
+            }).catch(err => {
+                alert('this person is not your friend, he cannot see your message without being in your friend list')
+                console.log("updating lastMessage", err.message)
+            })
+        })
     }
 
     useEffect(() => {
@@ -41,13 +48,47 @@ const Inbox = () => {
                         return ct;
                     }))
                 })
+            onSnapshot(doc(getFirestore(), "chats", inbox.chatId),
+                snapshot => {
+                    if (!snapshot.exists()) {
+                        router.push("/friend")
+                    }
+                })
 
             onSnapshot(doc(getFirestore(), "users", inbox.members.find(fr => fr !== user.uid)),
                 snapshot => {
                     setFriendProfile(snapshot.data());
                 })
         }
-    }, [inbox.chatId,inbox.members,router,user.uid])
+    }, [inbox.chatId, inbox.members, router, user.uid])
+
+    function audioCall(id) {
+        alert(id)
+    }
+
+    // function initializeWebRTC() {
+    //     const pc = new RTCPeerConnection()
+    //     pc.createOffer().then(offer => {
+    //         pc.setLocalDescription(offer).then(() => {
+                
+    //         })
+    //     })
+    // }
+
+    // async function getTracks(pc) {
+    //     try {
+    //         const stream = await window.navigator.mediaDevices.getUserMedia({ audio: true })
+    //         stream.getTracks().forEach(track => {
+    //             if (track.getConstraints().noiseSuppression) {
+    //                 track.applyConstraints({ noiseSuppression: true })
+    //             }
+    //             pc.addTrack(track, stream)
+    //         });
+    //         return stream;
+    //     } catch (error) {
+    //         throw "Your device doesn't support it";
+    //     }
+    // }
 
     return (
         <div className="container-fluid" style={{ flex: "1 1 auto" }}>
@@ -62,12 +103,16 @@ const Inbox = () => {
                                         <h5 className='m-0'>{friendProfile.displayName || friendProfile.email}</h5>
                                         {friendProfile.active && <i className='bg-success rounded-circle' style={{ width: "10px", height: "10px" }}></i>}
                                     </div>
-                                    <div className="dropdown">
-                                        <i className="bi bi-three-dots-vertical" role={"button"} data-bs-toggle="dropdown" aria-expanded="false"></i>
-                                        <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                                            <li><a className='dropdown-item'>a</a></li>
-                                            <li><a className='dropdown-item'>a</a></li>
-                                        </ul>
+                                    <div className="d-flex gap-4">
+                                        <i className="bi bi-camera-video" role={"button"}></i>
+                                        <i className="bi bi-telephone" role={"button"} onClick={() => audioCall(friendProfile.uid)}></i>
+                                        <div className="dropdown">
+                                            <i className="bi bi-three-dots-vertical" role={"button"} data-bs-toggle="dropdown" aria-expanded="false"></i>
+                                            <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                                                <li><a className='dropdown-item'>a</a></li>
+                                                <li><a className='dropdown-item'>a</a></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className='card h-100'>
