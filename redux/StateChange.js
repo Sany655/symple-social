@@ -11,13 +11,7 @@ const StateChange = ({ children }) => {
         onAuthStateChanged(auth, user => {
             if (user) {
                 if (typeof window !== "undefined") {
-                    localStorage.setItem("user", JSON.stringify({
-                        uid: user.uid,
-                        name: user.displayName,
-                        email: user.email,
-                        pic: user.photoURL,
-                        phone: user.phoneNumber
-                    }))
+                    localStorage.setItem("user", JSON.stringify(user))
                 }
                 getDoc(doc(getFirestore(), "users", user.uid)).then(userRes => {
                     if (userRes.exists()) {
@@ -27,13 +21,7 @@ const StateChange = ({ children }) => {
                     }
                 })
                 dispatch({
-                    type: "auth-check", payload: {
-                        uid: user.uid,
-                        name: user.displayName,
-                        email: user.email,
-                        pic: user.photoURL,
-                        phone: user.phoneNumber
-                    }
+                    type: "auth-check", payload: user
                 })
             } else {
                 if (typeof window !== "undefined") {

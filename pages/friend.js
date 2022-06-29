@@ -15,11 +15,10 @@ const Friend = () => {
         friends: [],
         pendings: [],
         requests: [],
-        loading: false
+        loading: true
     })
 
     useEffect(() => {
-        setData({ ...data, loading: true })
         onSnapshot(query(collection(getFirestore(), "chats"), orderBy("lastMessage", "desc"), where("members", "array-contains", user.uid)), snapChats => {
             const requests = []
             const pendings = []
@@ -37,10 +36,6 @@ const Friend = () => {
             })
             setData({ loading: false, friends: friends, requests: requests, pendings: pendings })
         })
-
-        // getDocs(collection(getFirestore(), "chats", "NhXMkhDHnVZ5c8kaHBsQ4UxRmAH2dh0r0NBl89h3y4wU1aYWYJUw1v12", "messages")).then(res => {
-        //     console.log(res.docs.length);
-        // })
     }, [])
 
     const accept = (id) => {

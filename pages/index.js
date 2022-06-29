@@ -7,7 +7,6 @@ import withProtected from './middlewares/withProtected'
 
 const Blog = () => {
     const user = useSelector(state => state.auth).user
-    const { list } = useSelector(state => state.friends)
     const [blogs, setBlogs] = useState([])
     const [post, setPost] = useState("")
     const [loading, setLoading] = useState(false)
@@ -34,28 +33,31 @@ const Blog = () => {
 
     useEffect(() => {
         setLoading(true)
-        const ids = list.map(li => li.members.find(member => member !== user.uid))
-        ids.push(user.uid)
-        onSnapshot(query(collection(getFirestore(), "blogs"), orderBy('timestamp', 'desc'), where("user.uid", "in", ids)), (snapshot) => {
-            setBlogs(snapshot.docs.map(snapblog => {
-                const blg = snapblog.data();
-                blg.id = snapblog.id;
-                setLoading(false)
-                return blg;
-            }))
-            if (snapshot.docs.length === 0) {
-                setLoading(false)
-            }
+
+        onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid)), snapChats => {
+            const friends = snapChats.docs.map(snapChat => snapChat.data().status===true?snapChat.data().members.find(member => member !== user.uid): null)
+            friends.push(user.uid)
+            onSnapshot(query(collection(getFirestore(), "blogs"), orderBy('timestamp', 'desc'), where("user.uid", "in", friends)), (snapshot) => {
+                setBlogs(snapshot.docs.map(snapblog => {
+                    const blg = snapblog.data();
+                    blg.id = snapblog.id;
+                    setLoading(false)
+                    return blg;
+                }))
+                if (snapshot.docs.length === 0) {
+                    setLoading(false)
+                }
+            })
         })
     }, [])
 
     return (
         <div className="container-fluid">
             <div className="row">
-                <div className="col-md-10 col-lg-6 col-xl-3 mx-auto py-5">
+                <div className="col-12 col-md-10 col-lg-6 col-xl-4 mx-auto py-5">
 
                     {/* post blog */}
-                    <div className="card mb-4 sticky-top" style={{zIndex:99}}>
+                    <div className="card mb-4 sticky-top" style={{ zIndex: 99 }}>
                         <form className="card-body" onSubmit={postBlog}>
                             <textarea placeholder="What's on your mind?" className="form-control " style={{ resize: "none" }} onChange={e => setPost(e.target.value)} value={post} />
                             <button type='submit' className="btn btn-primary btn-sm d-block ms-auto mt-3" disabled={submitLoading}>{submitLoading ? <div className="spinner-border" role="status">

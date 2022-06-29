@@ -9,17 +9,16 @@ import Spinner from '../components/Spinner'
 const People = () => {
     const user = useSelector(state => state.auth).user
     const [peoples, setPeoples] = useState([])
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        setLoading(true)
         onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid)), (snapFriends) => {
             const friendIds = snapFriends.docs.map(snapFriend => snapFriend.data().members.find(member => member !== user.uid))
             friendIds.push(user.uid)
             onSnapshot(query(collection(getFirestore(), "users"), where("uid", "not-in", friendIds)), snapPeoples => {
                 setPeoples(snapPeoples.docs.map(people => people.data()));
+                setLoading(false)
             })
-            setLoading(false)
         })
     }, [])
 

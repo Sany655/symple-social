@@ -1,12 +1,14 @@
-import { addDoc, collection, doc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteField, doc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore'
 import Image from 'next/image'
 import { useRouter } from 'next/router'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import Spinner from '../components/Spinner'
+import useCall from '../service/CallProvider'
 import withProtected from './middlewares/withProtected'
 
 const Inbox = () => {
+    const { pc, setMyTrack, dc, sendingOffer } = useCall()
     const { inbox, loading } = useSelector(state => state.inbox)
     const { user } = useSelector(state => state.auth)
     const router = useRouter()
@@ -14,7 +16,6 @@ const Inbox = () => {
     const [chat, setChat] = useState([])
     const [ctld, setCtld] = useState(false)
     const [friendProfile, setFriendProfile] = useState({})
-
     const sendMessage = (e) => {
         setCtld(true)
         e.preventDefault()
@@ -27,8 +28,8 @@ const Inbox = () => {
             setText("")
             setCtld(false)
         }).catch(err => console.log(err.message)).finally(() => {
-            updateDoc(doc(getFirestore(),"chats",inbox.chatId),{
-                lastMessage:serverTimestamp()
+            updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
+                lastMessage: serverTimestamp()
             }).catch(err => {
                 alert('this person is not your friend, he cannot see your message without being in your friend list')
                 console.log("updating lastMessage", err.message)
@@ -60,35 +61,27 @@ const Inbox = () => {
                     setFriendProfile(snapshot.data());
                 })
         }
-    }, [inbox.chatId, inbox.members, router, user.uid])
+    }, [inbox.chatId, inbox.members, router, user.uid, window])
 
-    function audioCall(id) {
-        alert(id)
+    function audioCall() {
+        if (friendProfile.active) {
+            setMyTrack(false).then(() => {
+                sendingOffer(friendProfile,inbox)
+            })
+        } else {
+            alert("user is offline")
+        }
     }
 
-    // function initializeWebRTC() {
-    //     const pc = new RTCPeerConnection()
-    //     pc.createOffer().then(offer => {
-    //         pc.setLocalDescription(offer).then(() => {
-                
-    //         })
-    //     })
-    // }
+    function videoCall(id) {
+        // if (friendProfile.active) {
+        //     getTracks(true).then(stream => {
 
-    // async function getTracks(pc) {
-    //     try {
-    //         const stream = await window.navigator.mediaDevices.getUserMedia({ audio: true })
-    //         stream.getTracks().forEach(track => {
-    //             if (track.getConstraints().noiseSuppression) {
-    //                 track.applyConstraints({ noiseSuppression: true })
-    //             }
-    //             pc.addTrack(track, stream)
-    //         });
-    //         return stream;
-    //     } catch (error) {
-    //         throw "Your device doesn't support it";
-    //     }
-    // }
+        //     })
+        // } else {
+        //     alert("user is offline")
+        // }
+    }
 
     return (
         <div className="container-fluid" style={{ flex: "1 1 auto" }}>
@@ -104,7 +97,7 @@ const Inbox = () => {
                                         {friendProfile.active && <i className='bg-success rounded-circle' style={{ width: "10px", height: "10px" }}></i>}
                                     </div>
                                     <div className="d-flex gap-4">
-                                        <i className="bi bi-camera-video" role={"button"}></i>
+                                        <i className="bi bi-camera-video" role={"button"} onClick={() => videoCall(friendProfile.uid)}></i>
                                         <i className="bi bi-telephone" role={"button"} onClick={() => audioCall(friendProfile.uid)}></i>
                                         <div className="dropdown">
                                             <i className="bi bi-three-dots-vertical" role={"button"} data-bs-toggle="dropdown" aria-expanded="false"></i>

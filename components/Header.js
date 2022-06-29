@@ -1,13 +1,16 @@
 import { getAuth, signOut } from 'firebase/auth'
 import Link from 'next/link'
 import Image from 'next/image'
-import React from 'react'
-import { useSelector } from "react-redux"
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from "react-redux"
+import { collection, deleteField, doc, getDoc, getDocs, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore'
+import useCall from '../service/CallProvider'
 
 const Header = () => {
-    const auth = useSelector(state => state.auth).user
+    const user = useSelector(state => state.auth).user
+
     return (
-        <header style={{flex:"0 0 auto"}}>
+        <header style={{ flex: "0 0 auto" }}>
             <nav className="navbar navbar-expand-lg navbar-light bg-light">
                 <div className="container-fluid">
                     <a className="navbar-brand" href="#">Navbar</a>
@@ -17,7 +20,7 @@ const Header = () => {
                     <div className="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                             {
-                                auth ? (
+                                user ? (
                                     <>
                                         <li className="nav-item">
                                             <Link href={"/"}><a className="nav-link">Home</a></Link>
@@ -49,16 +52,16 @@ const Header = () => {
                             <button className="btn btn-outline-success" type="submit">Search</button>
                         </form>
                         {
-                            auth && <div className='dropdown'>
+                            user && <div className='dropdown'>
                                 <a className="nav-link" href="#" id="dropdownMenuButton1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <Image src={auth.pic?auth.pic:"/default_user.png"} alt="" className='rounded-circle border' width="45px" height={"45px"} />
+                                    <Image src={user.photoURL ? user.photoURL : "/default_user.png"} alt="" className='rounded-circle border' width="45px" height={"45px"} />
                                 </a>
-                                <ul style={{zIndex:100}} className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                                    <li className='px-4'>{auth.name || "Name"}</li>
-                                    <li className='px-4'>{auth.email || "Email"}</li>
-                                    <li className='px-4'>{auth.phone || "Phone"}</li>
+                                <ul style={{ zIndex: 100 }} className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
+                                    <li className='px-4'>{user.displayName || "Name"}</li>
+                                    <li className='px-4'>{user.email || "Email"}</li>
+                                    <li className='px-4'>{user.phone || "Phone"}</li>
                                     <li className='px-4 pb-1'><button className="btn btn-warning btn-sm ">Edit Profile</button></li>
-                                    <li className='px-4'><button className="btn btn-primary btn-sm" onClick={() => signOut(getAuth()).then().catch(err => console.log(err))}>Logout</button></li>
+                                    <li className='px-4'><button className="btn btn-primary btn-sm" onClick={() => signOut(getuser()).then().catch(err => console.log(err))}>Logout</button></li>
                                 </ul>
                             </div>
                         }
