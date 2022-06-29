@@ -1,10 +1,7 @@
 import { getAuth, signOut } from 'firebase/auth'
 import Link from 'next/link'
 import Image from 'next/image'
-import React, { useEffect } from 'react'
-import { useDispatch, useSelector } from "react-redux"
-import { collection, deleteField, doc, getDoc, getDocs, getFirestore, onSnapshot, query, updateDoc, where } from 'firebase/firestore'
-import useCall from '../service/CallProvider'
+import { useSelector } from "react-redux"
 
 const Header = () => {
     const user = useSelector(state => state.auth).user
@@ -61,7 +58,7 @@ const Header = () => {
                                     <li className='px-4'>{user.email || "Email"}</li>
                                     <li className='px-4'>{user.phone || "Phone"}</li>
                                     <li className='px-4 pb-1'><button className="btn btn-warning btn-sm ">Edit Profile</button></li>
-                                    <li className='px-4'><button className="btn btn-primary btn-sm" onClick={() => signOut(getuser()).then().catch(err => console.log(err))}>Logout</button></li>
+                                    <li className='px-4'><button className="btn btn-primary btn-sm" onClick={() => signOut(getAuth()).then().catch(err => console.log(err))}>Logout</button></li>
                                 </ul>
                             </div>
                         }
