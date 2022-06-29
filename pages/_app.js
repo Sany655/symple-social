@@ -34,7 +34,7 @@ function MyApp({ Component, pageProps }) {
 
 function CallWrapper({ children }) {
     const { call } = useCall()
-    if (call.calling||call.ringing) {
+    if (call.calling || call.ringing) {
         if (call.type === "audio") {
             return <AudioCall />
         } else if (call.type === "video") {

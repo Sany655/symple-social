@@ -20,54 +20,58 @@ export const CallProvider = ({ children }) => {
     const userTrack = useRef()
 
     useEffect(() => {
-        startingPc()
+        if (user) {
+            startingPc()
 
-        onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid)),
-            snapshot => {
-                snapshot.docs.map(snapMap => {
-                    const snap = snapMap.data();
-                    if ((snap.callState?.callingTo === user.uid) && (snap.callState?.status === "ringing")) {
-                        getDoc(doc(getFirestore(), "users", snap.members.find(member => member !== user.uid))).then(sender => {
-                            setCall({
-                                ...call,
-                                sender: sender.data(),
-                                ringing: true,
-                                reciever: user,
-                                chatId: snap.id
+            onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid)),
+                snapshot => {
+                    snapshot.docs.map(snapMap => {
+                        const snap = snapMap.data();
+                        if ((snap.callState?.callingTo === user.uid) && (snap.callState?.status === "ringing")) {
+                            getDoc(doc(getFirestore(), "users", snap.members.find(member => member !== user.uid))).then(sender => {
+                                setCall({
+                                    ...call,
+                                    sender: sender.data(),
+                                    ringing: true,
+                                    reciever: user,
+                                    chatId: snap.id
+                                })
+                                if (confirm((sender.data().displayName || sender.data().email) + " is calling you, yould u want to recieve?")) {
+                                    recievingCall(sender.data())
+                                } else {
+                                    cancelCall(snapMap.id)
+                                }
                             })
-                            if (confirm((sender.data().displayName || sender.data().email) + " is calling you, yould u want to recieve?")) {
-                                recievingCall(sender.data())
-                            } else {
-                                cancelCall(snapMap.id)
-                            }
-                        })
-                    }
+                        }
 
-                    if (snap.callState?.status === "cancelled") {
-                        updateDoc(doc(getFirestore(), "chats", snapMap.id), { callState: deleteField() }).then(() => {
-                            // if (call.tracks.mine) {
-                            myTrack.current.getTracks().forEach(track => track.stop())
-                            // }
-                            // setCall({ ...call, restart: true })
-                            startingPc()
-                        }).catch(err => console.log("delete callState ", err.message))
-                    }
+                        if (snap.callState?.status === "cancelled") {
+                            updateDoc(doc(getFirestore(), "chats", snapMap.id), { callState: deleteField() }).then(() => {
+                                // if (call.tracks.mine) {
+                                myTrack.current.getTracks().forEach(track => track.stop())
+                                // }
+                                // setCall({ ...call, restart: true })
+                                startingPc()
+                            }).catch(err => console.log("delete callState ", err.message))
+                        }
+                    })
                 })
-            })
+        }
     }, [])
 
     useEffect(() => {
-        async function getFriends() {
-            getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "==", "ringing"))).then(friends => {
-                friends.docs.map(friend => {
-                    updateDoc(doc(getFirestore(), "chats", friend.id), { callState: deleteField() }).then().catch(err => console.log("delete callState ", err.message))
+        if (user) {
+            async function getFriends() {
+                getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "==", "ringing"))).then(friends => {
+                    friends.docs.map(friend => {
+                        updateDoc(doc(getFirestore(), "chats", friend.id), { callState: deleteField() }).then().catch(err => console.log("delete callState ", err.message))
+                    })
+                }).finally(() => {
+                    startingPc()
                 })
-            }).finally(() => {
-                startingPc()
-            })
-        }
+            }
 
-        getFriends()
+            getFriends()
+        }
     }, [call.restart])
 
     function recievingCall(sender) {
@@ -120,7 +124,7 @@ export const CallProvider = ({ children }) => {
                 myTrack.current = stream;
 
             }).catch(err => console.log("track ", err.message))
-        }else{
+        } else {
             alert("window.navigator.mediaDevices error")
         }
     }
