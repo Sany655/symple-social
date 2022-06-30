@@ -2,7 +2,7 @@ import { addDoc, collection, deleteField, doc, getFirestore, onSnapshot, serverT
 import Image from 'next/image'
 import { useRouter } from 'next/router'
 import React, { useEffect, useRef, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import Spinner from '../components/Spinner'
 import useCall from '../service/CallProvider'
 import withProtected from './middlewares/withProtected'
@@ -16,6 +16,8 @@ const Inbox = () => {
     const [chat, setChat] = useState([])
     const [ctld, setCtld] = useState(false)
     const [friendProfile, setFriendProfile] = useState({})
+    const dispatch = useDispatch()
+
     const sendMessage = (e) => {
         setCtld(true)
         e.preventDefault()
@@ -48,6 +50,7 @@ const Inbox = () => {
                         ct.id = doc.id
                         return ct;
                     }))
+                    dispatch({ type: "get-inbox", payload: inbox })
                 })
             onSnapshot(doc(getFirestore(), "chats", inbox.chatId),
                 snapshot => {
@@ -66,7 +69,7 @@ const Inbox = () => {
     function audioCall() {
         if (friendProfile.active) {
             setMyTrack(false).then(() => {
-                sendingOffer(friendProfile,inbox)
+                sendingOffer(friendProfile, inbox)
             })
         } else {
             alert("user is offline")

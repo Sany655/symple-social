@@ -1,11 +1,26 @@
 import Image from 'next/image'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import useCall from '../service/CallProvider'
 
 const AudioCall = () => {
     const { call, cancelCall, userTrack } = useCall()
+    const [callInfo, setCallInfo] = useState({
+        user: {}
+    })
 
-    const recieveCall = () => null
+    useEffect(() => {
+        if (call.ringing) {
+            setCallInfo(pre => ({
+                ...pre,
+                user: call.sender
+            }))
+        } else if (call.calling) {
+            setCallInfo(pre => ({
+                ...pre,
+                user: call.reciever
+            }))
+        }
+    }, [])
 
     return (
         <div className="container-fluid h-100">
@@ -14,13 +29,10 @@ const AudioCall = () => {
                 <div className="col-12 col-md-6 m-auto bg-dark h-100 text-light py-5">
                     <div className="d-flex flex-column align-items-center justify-content-between h-100">
                         <div className="d-flex flex-column align-items-center">
-                            <Image src={call.reciever.photoURL ? call.reciever.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"150px"} height="150px" />
-                            <h1>{call.reciever.displayName || call.reciever.email}</h1>
+                            <Image src={user.photoURL ? user.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"150px"} height="150px" />
+                            <h1>{user.displayName || user.email}</h1>
                         </div>
                         <div className="d-flex gap-5">
-                            {
-                                call.ringing && <i className="bi bi-telephone-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recieveCall()}></i>
-                            }
                             <i className="bi bi-telephone-x-fill bg-danger fs-1 p-2 rounded-circle" role={"button"} onClick={() => cancelCall(call.chatId)}></i>
                         </div>
                     </div>

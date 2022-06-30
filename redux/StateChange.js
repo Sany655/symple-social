@@ -10,33 +10,40 @@ const StateChange = ({ children }) => {
     useEffect(() => {
         onAuthStateChanged(auth, user => {
             if (user) {
-                if (typeof window !== "undefined") {
-                    localStorage.setItem("user", JSON.stringify(user))
-                }
                 getDoc(doc(getFirestore(), "users", user.uid)).then(userRes => {
                     if (userRes.exists()) {
+                        if (typeof window !== "undefined") {
+                            localStorage.setItem("user", JSON.stringify(userRes.data()))
+                        }
                         updateDoc(doc(getFirestore(), "users", user.uid), {
                             active: true
-                        }).catch(err => console.log(err.message))
+                        }).catch(err => console.log(err.message)).finally(() => {
+                            dispatch({
+                                type: "auth-check", payload: userRes.data()
+                            })
+                            setLoading(false)
+                        })
                     }
-                })
-                dispatch({
-                    type: "auth-check", payload: user
-                })
+                }).catch(err => console.log("getting user ", err.message))
             } else {
                 if (typeof window !== "undefined") {
                     const user = JSON.parse(localStorage.getItem("user"))
-                    getDoc(doc(getFirestore(), "users", user.uid)).then(userRes => {
-                        if (userRes.exists()) {
-                            updateDoc(doc(getFirestore(), "users", user.uid), {
-                                active: false
-                            }).catch(err => console.log(err.message))
-                        }
-                    })
+                    if (user) {
+                        getDoc(doc(getFirestore(), "users", user.uid)).then(userRes => {
+                            if (userRes.exists()) {
+                                updateDoc(doc(getFirestore(), "users", user.uid), {
+                                    active: false
+                                }).catch(err => console.log(err.message))
+                            }
+                        }).finally(() => {
+                            setLoading(false)
+                        })
+                    }else{
+                        setLoading(false)
+                    }
                 }
                 dispatch({ type: "auth-check", payload: null })
             }
-            setLoading(false)
         })
     }, [auth, dispatch])
 
