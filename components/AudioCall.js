@@ -6,7 +6,7 @@ const AudioCall = () => {
     const { call, cancelCall, userTrack } = useCall()
 
     const recieveCall = () => null
-    
+
     return (
         <div className="container-fluid h-100">
             <div className="row h-100">
@@ -18,7 +18,9 @@ const AudioCall = () => {
                             <h1>{call.reciever.displayName || call.reciever.email}</h1>
                         </div>
                         <div className="d-flex gap-5">
-                            <i className="bi bi-telephone-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recieveCall()}></i>
+                            {
+                                call.ringing && <i className="bi bi-telephone-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recieveCall()}></i>
+                            }
                             <i className="bi bi-telephone-x-fill bg-danger fs-1 p-2 rounded-circle" role={"button"} onClick={() => cancelCall(call.chatId)}></i>
                         </div>
                     </div>

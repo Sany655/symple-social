@@ -145,7 +145,6 @@ export const CallProvider = ({ children }) => {
                     },
                     lastMessage: serverTimestamp()
                 }).then(() => {
-                    // dispatch({ type: "calling", payload: { type:"audio", reciever:friendProfile } })
                     setCall({
                         ...call,
                         calling: true,
