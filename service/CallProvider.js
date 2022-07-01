@@ -25,10 +25,10 @@ export const CallProvider = ({ children }) => {
     // delete callState
     useEffect(() => {
         if (user) {
-            startingPc()
             async function getFriends() {
-                onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "in", ["cancelled"])),
+                onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "==", "cancelled")),
                     friends => {
+                        startingPc()
                         cancelCall()
                         friends.docs.map(chat => {
                             updateDoc(doc(getFirestore(), "chats", chat.id), { callState: deleteField() }).then().catch(err => console.log("delete callState ", err.message))
@@ -55,6 +55,7 @@ export const CallProvider = ({ children }) => {
                                     callState: snapMap.data().callState
                                 })
                             } else {
+                                startingPc()
                                 cancelCall(snapMap.id)
                             }
                         }).catch(err => console.log("err gettung user ", err.message))
@@ -67,36 +68,34 @@ export const CallProvider = ({ children }) => {
     useEffect(() => {
         if (user) {
             if (call.calling) {
+                let z = 0;
                 onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "==", "answering"), where("callState.callingFrom", "==", user.uid), where("callState.callingTo", "==", call.reciever.uid)),
                     snapshot => {
                         snapshot.docs.map(snapMap => {
-                            console.log(snapMap.data());
                             const remoteDesc = new RTCSessionDescription(JSON.parse(snapMap.data().callState.answer));
-                            pc.setRemoteDescription(remoteDesc).then(() => {
+                            if (z === 0) {
+                                z = z++;
+                                pc.current.setRemoteDescription(remoteDesc).then(() => {
 
-                            })
+                                })
+                            } else {
+                                console.log(z);
+                            }
                         })
                     })
             }
         }
+    }, [call, pc.current])
 
-        // if (snapMap.data().callState?.status === "cancelled") {
-        //     if (myTrack.current) {
-        //         myTrack.current.getTracks().forEach(track => track.stop())
-        //     }
-        //     startingPc()
-        //     updateDoc(doc(getFirestore(), "chats", snapMap.id), { callState: deleteField() }).then(() => {
-        //     }).catch(err => console.log("delete callState ", err.message))
-        // }
-    }, [call])
-
+    // getting user track
     useEffect(() => {
-        let pc1 = pc.current;
-        pc1.ontrack = e => {
-            userTrack.current = e.streams[0];
+        console.log(userTrack.current);
+        if (pc.current && userTrack.current) {
+            pc.current.ontrack = e => {
+                userTrack.current.srcObject = e.streams[0];
+            }
         }
-        return () => pc1 = null
-    }, [pc.current])
+    }, [call.calling, call.ringing, pc.current])
 
     function recievingCall(callData) {
         const calType = callData.callState.type === "audio" ? false : "video" && true;
@@ -137,7 +136,6 @@ export const CallProvider = ({ children }) => {
     }
 
     function cancelCall(chatId) {
-        startingPc()
         if (chatId) {
             updateDoc(doc(getFirestore(), "chats", chatId), { "callState.status": "cancelled" }).then(() => {
 
@@ -154,15 +152,10 @@ export const CallProvider = ({ children }) => {
     }
 
     function startingPc() {
-        pc.current = null
-        dc.current = null
-        if (myTrack.current) {
-            myTrack.current.getTracks().forEach(track => {
-                track.stop()
-            })
-            myTrack.current = null
+        if (pc.current) {
+            pc.current.close()
+            pc.current = null
         }
-        userTrack.current = null
         pc.current = new RTCPeerConnection({
             iceServers: [
                 {
@@ -177,6 +170,14 @@ export const CallProvider = ({ children }) => {
                 },
             ]
         })
+        dc.current = null
+        if (myTrack.current) {
+            myTrack.current.getTracks().forEach(track => {
+                track.stop()
+            })
+            myTrack.current = null
+        }
+        userTrack.current = null
         setCall(pre => ({
             ...pre,
             calling: false,
@@ -213,36 +214,35 @@ export const CallProvider = ({ children }) => {
         };
         pc.current.createOffer().then(offer => {
             pc.current.setLocalDescription(offer).then(() => {
-                updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
-                    callState: {
-                        offer: JSON.stringify(offer),
-                        callingTo: friendProfile.uid,
-                        callingFrom: user.uid,
-                        status: "ringing",
-                        type: "audio",
-                        timestamp: serverTimestamp(),
-                    },
-                    lastMessage: serverTimestamp()
-                }).then(() => {
-                    setCall(pre => ({
-                        ...pre,
-                        calling: true,
-                        type: "audio",
-                        reciever: friendProfile,
-                        chatId: inbox.chatId,
-                        sender: user
-                    }))
-                })
-                // pc.onicecandidate = e => {
-                //     localDescriptions = pc.localDescription
-                //     console.log(localDescriptions);
-                // };
+                pc.current.onicecandidate = e => {
+                    updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
+                        callState: {
+                            offer: JSON.stringify(pc.current.localDescription),
+                            callingTo: friendProfile.uid,
+                            callingFrom: user.uid,
+                            status: "ringing",
+                            type: "audio",
+                            timestamp: serverTimestamp(),
+                        },
+                        lastMessage: serverTimestamp()
+                    }).then((data) => {
+                        console.log(data);
+                        setCall(pre => ({
+                            ...pre,
+                            calling: true,
+                            type: "audio",
+                            reciever: friendProfile,
+                            chatId: inbox.chatId,
+                            sender: user
+                        }))
+                    })
+                }
             }).catch(err => console.log("error in setLocalDescription ", err.message))
         }).catch(err => console.log("error in create offer ", err.message))
     }
 
     return (
-        <Context.Provider value={{ startingPc, call, setMyTrack, sendingOffer, myTrack: myTrack.current, userTrack: userTrack.current, cancelCall }}>
+        <Context.Provider value={{ call, setMyTrack, sendingOffer, myTrack: myTrack.current, userTrack, cancelCall }}>
             {children}
         </Context.Provider>
     )
