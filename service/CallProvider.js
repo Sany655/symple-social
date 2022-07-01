@@ -95,7 +95,7 @@ export const CallProvider = ({ children }) => {
                 userTrack.current.srcObject = e.streams[0];
             }
         }
-    }, [call.calling, call.ringing, userTrack.current])
+    }, [pc.current, userTrack.current])
 
     function recievingCall(callData) {
         const calType = callData.callState.type === "audio" ? false : "video" && true;
@@ -174,7 +174,6 @@ export const CallProvider = ({ children }) => {
         if (myTrack.current) {
             myTrack.current.getTracks().forEach(track => {
                 track.stop()
-                track.close()
             })
             myTrack.current = null
         }
