@@ -23,7 +23,7 @@ const AudioCall = () => {
     }, [])
 
     return (
-        <div className={`d-none ${(call.calling||call.ringing)&&"d-block"}`}>
+        <div className={`${(call.calling||call.ringing)?"d-block":"d-none"}`}>
             <div className="row h-100">
                 <video ref={userTrack} autoPlay={true} controls></video>
                 <video ref={myTrack} autoPlay={true} muted controls></video>

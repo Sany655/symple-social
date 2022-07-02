@@ -38,7 +38,7 @@ function CallWrapper({ children }) {
     return (
         <div>
             <AudioCall />
-            <div className={`d-block ${(call.calling||call.ringing)&&"d-none"} h-100`}>
+            <div className={`${(call.calling||call.ringing)?"d-none":"d-block"} h-100`}>
                 {children}
             </div>
         </div>
