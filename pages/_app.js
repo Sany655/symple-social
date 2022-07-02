@@ -20,12 +20,12 @@ function MyApp({ Component, pageProps }) {
         <Provider store={store}>
             <StateChange>
                 <CallProvider>
-                    <CallWrapper>
-                        <div className="d-flex h-100 flex-column">
-                            <Header />
+                    <div className="d-flex h-100 flex-column">
+                        <Header />
+                        <CallWrapper>
                             <Component {...pageProps} />
-                        </div>
-                    </CallWrapper>
+                        </CallWrapper>
+                    </div>
                 </CallProvider>
             </StateChange>
         </Provider>
@@ -34,14 +34,15 @@ function MyApp({ Component, pageProps }) {
 
 function CallWrapper({ children }) {
     const { call } = useCall()
-    if (call.calling || call.ringing) {
-        if (call.type === "audio") {
-            return <AudioCall />
-        } else if (call.type === "video") {
-            return <VideoCall />
-        }
-    }
-    return children
+
+    return (
+        <div>
+            <AudioCall />
+            <div className={`d-block ${(call.calling||call.ringing)&&"d-none"} h-100`}>
+                {children}
+            </div>
+        </div>
+    )
 }
 
 export default MyApp

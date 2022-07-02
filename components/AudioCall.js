@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import useCall from '../service/CallProvider'
 
 const AudioCall = () => {
-    const { call, cancelCall, userTrack, myTrack, recievingCall, setMyTrack } = useCall()
+    const { call, cancelCall, userTrack, myTrack, recievingCall } = useCall()
     const [callInfo, setCallInfo] = useState({
         user: {}
     })
@@ -22,18 +22,8 @@ const AudioCall = () => {
         }
     }, [])
 
-    useEffect(() => {
-        async function set() {
-            await setMyTrack()
-        }
-        
-        if (userTrack.current && myTrack.current) {
-            set()
-        }
-    }, [])
-
     return (
-        <div className="container-fluid h-100">
+        <div className={`d-none ${(call.calling||call.ringing)&&"d-block"}`}>
             <div className="row h-100">
                 <video ref={userTrack} autoPlay={true} controls></video>
                 <video ref={myTrack} autoPlay={true} muted controls></video>
@@ -42,10 +32,10 @@ const AudioCall = () => {
                         <div className="d-flex flex-column align-items-center">
                             <Image src={callInfo.user.photoURL ? callInfo.user.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"150px"} height="150px" />
                             <h1>{callInfo.user.displayName || callInfo.user.email}</h1>
-                            {call.timer && <p>{call.timer}</p>}
+                            {call.timer&&<p>{call.timer}</p>}
                         </div>
                         <div className="d-flex gap-5">
-                            {(!call.onGoing && call.ringing) && <i className="bi bi-telephone-x-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recievingCall()}></i>}
+                            { (!call.onGoing&&call.ringing)&&<i className="bi bi-telephone-x-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recievingCall()}></i> }
                             <i className="bi bi-telephone-x-fill bg-danger fs-1 p-2 rounded-circle" role={"button"} onClick={() => cancelCall(call.chatId)}></i>
                         </div>
                     </div>

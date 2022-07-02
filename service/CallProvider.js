@@ -187,10 +187,11 @@ export const CallProvider = ({ children }) => {
 
     // calling
     function audioCall(friendProfile, inbox) {
+        !pc.current && alert("you are not ready to call, reload and try again")
         if (friendProfile.active) {
             getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", inbox.chatId), where("callState.status", "in", ["ringing", "answering", "cancelled"]))).then((chat) => {
                 if (chat.empty) { // other user callState is emty means he's not in a call!
-                    // setMyTrack(false).then(() => {
+                    setMyTrack(false).then(() => {
                         dc.current = pc.current.createDataChannel("channel")
                         dc.current.onopen = () => {
                             console.log("data channel opened, what to do with it?");
@@ -221,9 +222,9 @@ export const CallProvider = ({ children }) => {
                                 // }
                             }).catch(err => console.log("error in setLocalDescription ", err.message))
                         }).catch(err => console.log("error in create offer ", err.message))
-                    // }).finally(() => {
+                    }).finally(() => {
 
-                    // })
+                    })
                 } else {
                     alert("user is busy")
                 }
@@ -234,7 +235,7 @@ export const CallProvider = ({ children }) => {
     }
 
     return (
-        <Context.Provider value={{ call, myTrack, userTrack, cancelCall, audioCall, recievingCall, setMyTrack }}>
+        <Context.Provider value={{ call, myTrack, userTrack, cancelCall, audioCall, recievingCall }}>
             {children}
         </Context.Provider>
     )
