@@ -15,12 +15,13 @@ export const CallProvider = ({ children }) => {
         restart: false,
         chatId: null,
         timer: null,
-        offer:null
+        offer: null
     })
     const pc = useRef()
     const dc = useRef()
     const myTrack = useRef()
     const userTrack = useRef()
+    const track = useRef()
 
 
     // delete callState
@@ -55,7 +56,7 @@ export const CallProvider = ({ children }) => {
                                 chatId: snapMap.id,
                                 type: snapMap.data().callState.type,
                                 ringing: true,
-                                offer:snapMap.data().callState.offer
+                                offer: snapMap.data().callState.offer
                             }))
                         }).catch(err => console.log("err gettung user ", err.message))
                     })
@@ -82,7 +83,6 @@ export const CallProvider = ({ children }) => {
     useEffect(() => {
         if (pc.current) {
             pc.current.ontrack = e => {
-                console.log("set user track");
                 userTrack.current.srcObject = e.streams[0];
             }
         }
@@ -109,8 +109,8 @@ export const CallProvider = ({ children }) => {
                         }).then((data) => {
                             setCall(pre => ({
                                 ...pre,
-                                onGoing:true,
-                                timer:0
+                                onGoing: true,
+                                timer: 0
                             }))
                         })
                     })
@@ -137,10 +137,12 @@ export const CallProvider = ({ children }) => {
     }
 
     function startingPc() {
-        if (myTrack.current) {
-            myTrack.current.scrObject.getTracks().forEach(track => {
+        if (track.current) {
+            track.current.getTracks().forEach(track => {
                 track.stop()
             })
+            userTrack.current.srcObject = null
+            myTrack.current.srcObject = null
             console.log("trach stop");
             // myTrack.current = null
         }
@@ -184,6 +186,7 @@ export const CallProvider = ({ children }) => {
                 });
                 console.log("set my track");
                 myTrack.current.scrObject = stream;
+                track.current = stream;
 
             }).catch(err => console.log("track ", err.message))
         } else {
