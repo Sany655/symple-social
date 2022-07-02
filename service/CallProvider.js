@@ -21,7 +21,6 @@ export const CallProvider = ({ children }) => {
     const dc = useRef()
     const myTrack = useRef()
     const userTrack = useRef()
-    const track = useRef()
 
 
     // delete callState
@@ -137,19 +136,13 @@ export const CallProvider = ({ children }) => {
     }
 
     function startingPc() {
-        if (track.current) {
-            track.current.getTracks().forEach(track => {
-                track.stop()
-            })
-            userTrack.current.srcObject = null
-            myTrack.current.srcObject = null
-            console.log("trach stop");
-            // myTrack.current = null
-        }
-        if (pc.current) {
-            pc.current.close()
-            pc.current = null
-        }
+        userTrack.current.srcObject && userTrack.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
+        myTrack.current.srcObject && myTrack.current.srcObject.getTracks().forEach(track => {
+            track.stop()
+        })
+        pc.current && pc.current.close();
         pc.current = new RTCPeerConnection({
             iceServers: [
                 {
@@ -184,9 +177,7 @@ export const CallProvider = ({ children }) => {
                 stream.getTracks().forEach(track => {
                     pc.current.addTrack(track, stream)
                 });
-                console.log("set my track");
                 myTrack.current.scrObject = stream;
-                track.current = stream;
 
             }).catch(err => console.log("track ", err.message))
         } else {
@@ -199,7 +190,7 @@ export const CallProvider = ({ children }) => {
         if (friendProfile.active) {
             getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", inbox.chatId), where("callState.status", "in", ["ringing", "answering", "cancelled"]))).then((chat) => {
                 if (chat.empty) { // other user callState is emty means he's not in a call!
-                    setMyTrack(false).then(() => {
+                    // setMyTrack(false).then(() => {
                         dc.current = pc.current.createDataChannel("channel")
                         dc.current.onopen = () => {
                             console.log("data channel opened, what to do with it?");
@@ -230,9 +221,9 @@ export const CallProvider = ({ children }) => {
                                 // }
                             }).catch(err => console.log("error in setLocalDescription ", err.message))
                         }).catch(err => console.log("error in create offer ", err.message))
-                    }).finally(() => {
+                    // }).finally(() => {
 
-                    })
+                    // })
                 } else {
                     alert("user is busy")
                 }
@@ -243,7 +234,7 @@ export const CallProvider = ({ children }) => {
     }
 
     return (
-        <Context.Provider value={{ call, myTrack, userTrack, cancelCall, audioCall, recievingCall }}>
+        <Context.Provider value={{ call, myTrack, userTrack, cancelCall, audioCall, recievingCall, setMyTrack }}>
             {children}
         </Context.Provider>
     )
