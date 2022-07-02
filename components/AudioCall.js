@@ -25,7 +25,7 @@ const AudioCall = () => {
     return (
         <div className="container-fluid h-100">
             <div className="row h-100">
-                <audio ref={userTrack} src=""></audio>
+                <audio ref={userTrack} autoPlay={true}></audio>
                 <div className="col-12 col-md-6 m-auto bg-dark h-100 text-light py-5">
                     <div className="d-flex flex-column align-items-center justify-content-between h-100">
                         <div className="d-flex flex-column align-items-center">
