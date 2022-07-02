@@ -173,12 +173,11 @@ export const CallProvider = ({ children }) => {
 
     function setMyTrack(type) {
         if (window.navigator.mediaDevices) {
-            return window.navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(stream => {
+            window.navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(stream => {
                 stream.getTracks().forEach(track => {
                     pc.current.addTrack(track, stream)
                 });
-                myTrack.current.scrObject = stream;
-
+                return stream
             }).catch(err => console.log("track ", err.message))
         } else {
             alert("window.navigator.mediaDevices error")
@@ -191,7 +190,8 @@ export const CallProvider = ({ children }) => {
         if (friendProfile.active) {
             getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", inbox.chatId), where("callState.status", "in", ["ringing", "answering", "cancelled"]))).then((chat) => {
                 if (chat.empty) { // other user callState is emty means he's not in a call!
-                    setMyTrack(false).then(() => {
+                    setMyTrack(false).then((stream) => {
+                        myTrack.current.scrObject = stream;
                         dc.current = pc.current.createDataChannel("channel")
                         dc.current.onopen = () => {
                             console.log("data channel opened, what to do with it?");

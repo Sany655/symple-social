@@ -23,25 +23,25 @@ const AudioCall = () => {
     }, [])
 
     return (
-        <div className={`${(call.calling||call.ringing)?"d-block":"d-none"}`}>
+        <div className={`${(call.calling || call.ringing) ? "d-block" : "d-none"}`}>
             <div className="row h-100">
-                <video ref={userTrack} autoPlay={true} controls></video>
-                <video ref={myTrack} autoPlay={true} muted controls></video>
+                <video ref={userTrack} autoPlay={true}></video>
+                <video ref={myTrack} autoPlay={true} muted></video>
                 <div className="col-12 col-md-6 m-auto bg-dark h-100 text-light py-5">
                     <div className="d-flex flex-column align-items-center justify-content-between h-100">
                         <div className="d-flex flex-column align-items-center">
                             <Image src={callInfo.user.photoURL ? callInfo.user.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"150px"} height="150px" />
                             <h1>{callInfo.user.displayName || callInfo.user.email}</h1>
-                            {call.timer&&<p>{call.timer}</p>}
+                            {call.timer && <p>{call.timer}</p>}
                         </div>
                         <div className="d-flex gap-5">
-                            { (!call.onGoing&&call.ringing)&&<i className="bi bi-telephone-x-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recievingCall()}></i> }
+                            {(!call.onGoing && call.ringing) && <i className="bi bi-telephone-x-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recievingCall()}></i>}
                             <i className="bi bi-telephone-x-fill bg-danger fs-1 p-2 rounded-circle" role={"button"} onClick={() => cancelCall(call.chatId)}></i>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
 
