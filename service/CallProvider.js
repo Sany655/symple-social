@@ -136,10 +136,10 @@ export const CallProvider = ({ children }) => {
     }
 
     function startingPc() {
-        userTrack.current.srcObject && userTrack.current.srcObject.getTracks().forEach(track => {
+        userTrack.current && userTrack.current.srcObject && userTrack.current.srcObject.getTracks().forEach(track => {
             track.stop()
         })
-        myTrack.current.srcObject && myTrack.current.srcObject.getTracks().forEach(track => {
+        myTrack.current && myTrack.current.srcObject && myTrack.current.srcObject.getTracks().forEach(track => {
             track.stop()
         })
         pc.current && pc.current.close();
