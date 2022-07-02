@@ -14,7 +14,8 @@ export const CallProvider = ({ children }) => {
         reciever: {},
         restart: false,
         chatId: null,
-        timer: 0
+        timer: null,
+        offer:null
     })
     const pc = useRef()
     const dc = useRef()
@@ -47,17 +48,15 @@ export const CallProvider = ({ children }) => {
                 snapshot => {
                     snapshot.docs.map(snapMap => {
                         getDoc(doc(getFirestore(), "users", snapMap.data().callState.callingFrom)).then(sender => {
-                            if (confirm((sender.data().displayName || sender.data().email) + " is calling you, yould u want to recieve?")) {
-                                recievingCall({
-                                    sender: sender.data(),
-                                    reciever: user,
-                                    chatId: snapMap.id,
-                                    callState: snapMap.data().callState
-                                })
-                            } else {
-                                startingPc()
-                                cancelCall(snapMap.id)
-                            }
+                            setCall(prevState => ({
+                                ...prevState,
+                                sender: sender.data(),
+                                reciever: user,
+                                chatId: snapMap.id,
+                                type: snapMap.data().callState.type,
+                                ringing: true,
+                                offer:snapMap.data().callState.offer
+                            }))
                         }).catch(err => console.log("err gettung user ", err.message))
                     })
                 })
@@ -66,39 +65,31 @@ export const CallProvider = ({ children }) => {
 
     // getting answer
     useEffect(() => {
-        if (user) {
-            if (call.calling) {
-                let z = 0;
-                onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "==", "answering"), where("callState.callingFrom", "==", user.uid), where("callState.callingTo", "==", call.reciever.uid)),
-                    snapshot => {
-                        snapshot.docs.map(snapMap => {
-                            const remoteDesc = new RTCSessionDescription(JSON.parse(snapMap.data().callState.answer));
-                            if (z === 0) {
-                                z = z++;
-                                pc.current.setRemoteDescription(remoteDesc).then(() => {
-
-                                })
-                            } else {
-                                console.log(z);
-                            }
-                        })
+        if (call.reciever.uid && user.uid) {
+            onSnapshot(query(collection(getFirestore(), "chats"), where("members", "array-contains", user.uid), where("callState.status", "==", "answering"), where("callState.callingFrom", "==", user.uid), where("callState.callingTo", "==", call.reciever.uid)),
+                snapshot => {
+                    snapshot.docs.map(snapMap => {
+                        const remoteDesc = new RTCSessionDescription(JSON.parse(snapMap.data().callState.answer));
+                        pc.current.setRemoteDescription(remoteDesc).then(() => {
+                            console.log("setRemoteDesc first time");
+                        }).catch(err => console.log(err.message))
                     })
-            }
+                })
         }
-    }, [call, pc.current])
+    }, [call.reciever])
 
     // getting user track
     useEffect(() => {
-        if (pc.current && userTrack.current) {
+        if (pc.current) {
             pc.current.ontrack = e => {
-                console.log("set track");
+                console.log("set user track");
                 userTrack.current.srcObject = e.streams[0];
             }
         }
     }, [pc.current, userTrack.current])
 
-    function recievingCall(callData) {
-        const calType = callData.callState.type === "audio" ? false : "video" && true;
+    function recievingCall() {
+        const calType = call.type === "audio" ? false : "video" && true;
         setMyTrack(calType).then(() => {
             pc.current.ondatachannel = e => {
                 dc.current = e.channel;
@@ -106,36 +97,30 @@ export const CallProvider = ({ children }) => {
                     console.log("channel opened! what to do next?");
                 };
             }
-            const remoteDesc = new RTCSessionDescription(JSON.parse(callData.callState.offer))
+            const remoteDesc = new RTCSessionDescription(JSON.parse(call.offer))
             pc.current.setRemoteDescription(remoteDesc).then(() => {
                 pc.current.createAnswer().then(answer => {
                     pc.current.setLocalDescription(answer).then(() => {
-                        pc.current.onicecandidate = e => {
-                            updateDoc(doc(getFirestore(), "chats", callData.chatId), {
-                                "callState.answer": JSON.stringify(pc.current.localDescription),
-                                "callState.status": "answering",
-                                "callState.timestamp": serverTimestamp(),
-                                lastMessage: serverTimestamp()
-                            }).then((data) => {
-                                setCall(prevState => ({
-                                    ...prevState,
-                                    sender: callData.sender,
-                                    reciever: user,
-                                    ringing: true,
-                                    chatId: callData.id,
-                                    type: callData.callState.type
-                                }))
-                            })
-                        };
+                        updateDoc(doc(getFirestore(), "chats", call.chatId), {
+                            "callState.answer": JSON.stringify(pc.current.localDescription),
+                            "callState.status": "answering",
+                            "callState.timestamp": serverTimestamp(),
+                            lastMessage: serverTimestamp()
+                        }).then((data) => {
+                            setCall(pre => ({
+                                ...pre,
+                                onGoing:true,
+                                timer:0
+                            }))
+                        })
                     })
                 })
             })
-
-            // console.log(callData);
         })
     }
 
     function cancelCall(chatId) {
+        startingPc()
         if (chatId) {
             updateDoc(doc(getFirestore(), "chats", chatId), { "callState.status": "cancelled" }).then(() => {
 
@@ -152,6 +137,13 @@ export const CallProvider = ({ children }) => {
     }
 
     function startingPc() {
+        if (myTrack.current) {
+            myTrack.current.getTracks().forEach(track => {
+                track.stop()
+            })
+            console.log("trach stop");
+            // myTrack.current = null
+        }
         if (pc.current) {
             pc.current.close()
             pc.current = null
@@ -171,12 +163,6 @@ export const CallProvider = ({ children }) => {
             ]
         })
         dc.current = null
-        if (myTrack.current) {
-            myTrack.current.getTracks().forEach(track => {
-                track.stop()
-            })
-            myTrack.current = null
-        }
         userTrack.current = null
         setCall(pre => ({
             ...pre,
@@ -194,11 +180,9 @@ export const CallProvider = ({ children }) => {
         if (window.navigator.mediaDevices) {
             return window.navigator.mediaDevices.getUserMedia({ audio: true, video: type }).then(stream => {
                 stream.getTracks().forEach(track => {
-                    if (track.getConstraints().noiseSuppression) {
-                        track.applyConstraints({ noiseSuppression: true })
-                    }
                     pc.current.addTrack(track, stream)
                 });
+                console.log("set my track");
                 myTrack.current = stream;
 
             }).catch(err => console.log("track ", err.message))
@@ -207,42 +191,56 @@ export const CallProvider = ({ children }) => {
         }
     }
 
-    function sendingOffer(friendProfile, inbox) {
-        dc.current = pc.current.createDataChannel("channel")
-        dc.current.onopen = () => {
-            console.log("data channel opened, what to do with it?");
-        };
-        pc.current.createOffer().then(offer => {
-            pc.current.setLocalDescription(offer).then(() => {
-                pc.current.onicecandidate = e => {
-                    updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
-                        callState: {
-                            offer: JSON.stringify(pc.current.localDescription),
-                            callingTo: friendProfile.uid,
-                            callingFrom: user.uid,
-                            status: "ringing",
-                            type: "audio",
-                            timestamp: serverTimestamp(),
-                        },
-                        lastMessage: serverTimestamp()
-                    }).then((data) => {
-                        console.log(data);
-                        setCall(pre => ({
-                            ...pre,
-                            calling: true,
-                            type: "audio",
-                            reciever: friendProfile,
-                            chatId: inbox.chatId,
-                            sender: user
-                        }))
+    // calling
+    function audioCall(friendProfile, inbox) {
+        if (friendProfile.active) {
+            getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", inbox.chatId), where("callState.status", "in", ["ringing", "answering", "cancelled"]))).then((chat) => {
+                if (chat.empty) { // other user callState is emty means he's not in a call!
+                    setMyTrack(false).then(() => {
+                        dc.current = pc.current.createDataChannel("channel")
+                        dc.current.onopen = () => {
+                            console.log("data channel opened, what to do with it?");
+                        };
+                        pc.current.createOffer().then(offer => {
+                            pc.current.setLocalDescription(offer).then(() => {
+                                // pc.current.onicecandidate = e => {
+                                updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
+                                    callState: {
+                                        offer: JSON.stringify(pc.current.localDescription),
+                                        callingTo: friendProfile.uid,
+                                        callingFrom: user.uid,
+                                        status: "ringing",
+                                        type: "audio",
+                                        timestamp: serverTimestamp(),
+                                    },
+                                    lastMessage: serverTimestamp()
+                                }).then((data) => {
+                                    setCall(pre => ({
+                                        ...pre,
+                                        calling: true,
+                                        type: "audio",
+                                        reciever: friendProfile,
+                                        chatId: inbox.chatId,
+                                        sender: user
+                                    }))
+                                })
+                                // }
+                            }).catch(err => console.log("error in setLocalDescription ", err.message))
+                        }).catch(err => console.log("error in create offer ", err.message))
+                    }).finally(() => {
+
                     })
+                } else {
+                    alert("user is busy")
                 }
-            }).catch(err => console.log("error in setLocalDescription ", err.message))
-        }).catch(err => console.log("error in create offer ", err.message))
+            }).catch(err => console.log(err.message))
+        } else {
+            alert("user is offline")
+        }
     }
 
     return (
-        <Context.Provider value={{ call, setMyTrack, sendingOffer, myTrack: myTrack.current, userTrack, cancelCall }}>
+        <Context.Provider value={{ call, myTrack: myTrack.current, userTrack, cancelCall, audioCall, recievingCall }}>
             {children}
         </Context.Provider>
     )

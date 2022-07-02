@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import useCall from '../service/CallProvider'
 
 const AudioCall = () => {
-    const { call, cancelCall, userTrack } = useCall()
+    const { call, cancelCall, userTrack, recievingCall } = useCall()
     const [callInfo, setCallInfo] = useState({
         user: {}
     })
@@ -31,8 +31,10 @@ const AudioCall = () => {
                         <div className="d-flex flex-column align-items-center">
                             <Image src={callInfo.user.photoURL ? callInfo.user.photoURL : "/default_user.png"} alt="" className='rounded-circle' width={"150px"} height="150px" />
                             <h1>{callInfo.user.displayName || callInfo.user.email}</h1>
+                            {call.timer&&<p>{call.timer}</p>}
                         </div>
                         <div className="d-flex gap-5">
+                            { (!call.onGoing&&call.ringing)&&<i className="bi bi-telephone-x-fill bg-success fs-1 p-2 rounded-circle" role={"button"} onClick={() => recievingCall()}></i> }
                             <i className="bi bi-telephone-x-fill bg-danger fs-1 p-2 rounded-circle" role={"button"} onClick={() => cancelCall(call.chatId)}></i>
                         </div>
                     </div>

@@ -8,7 +8,7 @@ import useCall from '../service/CallProvider'
 import withProtected from './middlewares/withProtected'
 
 const Inbox = () => {
-    const { pc, setMyTrack, dc, sendingOffer } = useCall()
+    const { audioCall } = useCall()
     const { inbox, loading } = useSelector(state => state.inbox)
     const { user } = useSelector(state => state.auth)
     const router = useRouter()
@@ -66,16 +66,6 @@ const Inbox = () => {
         }
     }, [inbox.chatId, inbox.members, router, user.uid, window])
 
-    function audioCall() {
-        if (friendProfile.active) {
-            setMyTrack(false).then(() => {
-                sendingOffer(friendProfile, inbox)
-            })
-        } else {
-            alert("user is offline")
-        }
-    }
-
     function videoCall(id) {
         // if (friendProfile.active) {
         //     getTracks(true).then(stream => {
@@ -101,7 +91,7 @@ const Inbox = () => {
                                     </div>
                                     <div className="d-flex gap-4">
                                         <i className="bi bi-camera-video" role={"button"} onClick={() => videoCall(friendProfile.uid)}></i>
-                                        <i className="bi bi-telephone" role={"button"} onClick={() => audioCall(friendProfile.uid)}></i>
+                                        <i className="bi bi-telephone" role={"button"} onClick={() => audioCall(friendProfile,inbox)}></i>
                                         <div className="dropdown">
                                             <i className="bi bi-three-dots-vertical" role={"button"} data-bs-toggle="dropdown" aria-expanded="false"></i>
                                             <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
