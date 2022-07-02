@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import useCall from '../service/CallProvider'
 
 const AudioCall = () => {
-    const { call, cancelCall, userTrack, recievingCall } = useCall()
+    const { call, cancelCall, userTrack, myTrack, recievingCall } = useCall()
     const [callInfo, setCallInfo] = useState({
         user: {}
     })
@@ -25,7 +25,8 @@ const AudioCall = () => {
     return (
         <div className="container-fluid h-100">
             <div className="row h-100">
-                <video ref={userTrack} autoPlay={true}></video>
+                <audio ref={userTrack} autoPlay={true}></audio>
+                <audio ref={myTrack} autoPlay={true} muted></audio>
                 <div className="col-12 col-md-6 m-auto bg-dark h-100 text-light py-5">
                     <div className="d-flex flex-column align-items-center justify-content-between h-100">
                         <div className="d-flex flex-column align-items-center">

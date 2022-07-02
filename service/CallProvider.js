@@ -138,7 +138,7 @@ export const CallProvider = ({ children }) => {
 
     function startingPc() {
         if (myTrack.current) {
-            myTrack.current.getTracks().forEach(track => {
+            myTrack.current.scrObject.getTracks().forEach(track => {
                 track.stop()
             })
             console.log("trach stop");
@@ -183,7 +183,7 @@ export const CallProvider = ({ children }) => {
                     pc.current.addTrack(track, stream)
                 });
                 console.log("set my track");
-                myTrack.current = stream;
+                myTrack.current.scrObject = stream;
 
             }).catch(err => console.log("track ", err.message))
         } else {
@@ -240,7 +240,7 @@ export const CallProvider = ({ children }) => {
     }
 
     return (
-        <Context.Provider value={{ call, myTrack: myTrack.current, userTrack, cancelCall, audioCall, recievingCall }}>
+        <Context.Provider value={{ call, myTrack, userTrack, cancelCall, audioCall, recievingCall }}>
             {children}
         </Context.Provider>
     )
