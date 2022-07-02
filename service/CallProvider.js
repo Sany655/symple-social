@@ -180,7 +180,7 @@ export const CallProvider = ({ children }) => {
 
     function setMyTrack(type) {
         if (window.navigator.mediaDevices) {
-            return window.navigator.mediaDevices.getUserMedia({ audio: true, video: type }).then(stream => {
+            return window.navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(stream => {
                 stream.getTracks().forEach(track => {
                     pc.current.addTrack(track, stream)
                 });
