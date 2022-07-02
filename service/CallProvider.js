@@ -173,7 +173,7 @@ export const CallProvider = ({ children }) => {
 
     async function setMyTrack(type) {
         try {
-            const stream = await window.navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+            const stream = await window.navigator.mediaDevices.getUserMedia({ audio: true, video: type })
             stream.getTracks().forEach(track => {
                 pc.current.addTrack(track, stream)
             });

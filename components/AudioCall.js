@@ -25,8 +25,8 @@ const AudioCall = () => {
     return (
         <div className={`${(call.calling || call.ringing) ? "d-block" : "d-none"}`}>
             <div className="row h-100">
-                <video ref={userTrack} autoPlay={true}></video>
-                <video ref={myTrack} autoPlay={true} muted></video>
+                <audio ref={userTrack} autoPlay={true}></audio>
+                <audio ref={myTrack} autoPlay={true} muted></audio>
                 <div className="col-12 col-md-6 m-auto bg-dark h-100 text-light py-5">
                     <div className="d-flex flex-column align-items-center justify-content-between h-100">
                         <div className="d-flex flex-column align-items-center">
