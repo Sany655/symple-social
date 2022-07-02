@@ -85,7 +85,7 @@ export const CallProvider = ({ children }) => {
                 userTrack.current.srcObject = e.streams[0];
             }
         }
-    }, [pc.current, userTrack.current])
+    }, [pc.current])
 
     function recievingCall() {
         const calType = call.type === "audio" ? false : "video" && true;
@@ -100,18 +100,24 @@ export const CallProvider = ({ children }) => {
             pc.current.setRemoteDescription(remoteDesc).then(() => {
                 pc.current.createAnswer().then(answer => {
                     pc.current.setLocalDescription(answer).then(() => {
-                        updateDoc(doc(getFirestore(), "chats", call.chatId), {
-                            "callState.answer": JSON.stringify(pc.current.localDescription),
-                            "callState.status": "answering",
-                            "callState.timestamp": serverTimestamp(),
-                            lastMessage: serverTimestamp()
-                        }).then((data) => {
-                            setCall(pre => ({
-                                ...pre,
-                                onGoing: true,
-                                timer: 0
-                            }))
-                        })
+                        let ltc;
+                        pc.current.onicecandidate = () => {
+                            ltc = pc.current.localDescription;
+                        }
+                        setTimeout(() => {
+                            updateDoc(doc(getFirestore(), "chats", call.chatId), {
+                                "callState.answer": JSON.stringify(ltc),
+                                "callState.status": "answering",
+                                "callState.timestamp": serverTimestamp(),
+                                lastMessage: serverTimestamp()
+                            }).then((data) => {
+                                setCall(pre => ({
+                                    ...pre,
+                                    onGoing: true,
+                                    timer: 0
+                                }))
+                            })
+                        }, 2500)
                     })
                 })
             })
@@ -158,11 +164,11 @@ export const CallProvider = ({ children }) => {
             ]
         })
         dc.current = null
-        userTrack.current = null
         setCall(pre => ({
             ...pre,
             calling: false,
             ringing: false,
+            onGoing: false,
             type: null,
             sender: {},
             reciever: {},
@@ -177,7 +183,7 @@ export const CallProvider = ({ children }) => {
             stream.getTracks().forEach(track => {
                 pc.current.addTrack(track, stream)
             });
-            return stream
+            myTrack.current.srcObject = stream;
         } catch (error) {
             console.log(error.message)
         }
@@ -189,36 +195,39 @@ export const CallProvider = ({ children }) => {
         if (friendProfile.active) {
             getDocs(query(collection(getFirestore(), "chats"), where("members", "array-contains", inbox.chatId), where("callState.status", "in", ["ringing", "answering", "cancelled"]))).then((chat) => {
                 if (chat.empty) { // other user callState is emty means he's not in a call!
-                    setMyTrack(false).then((stream) => {
-                        myTrack.current.srcObject = stream;
+                    setMyTrack(false).then(() => {
                         dc.current = pc.current.createDataChannel("channel")
                         dc.current.onopen = () => {
                             console.log("data channel opened, what to do with it?");
                         };
                         pc.current.createOffer().then(offer => {
                             pc.current.setLocalDescription(offer).then(() => {
-                                // pc.current.onicecandidate = e => {
-                                updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
-                                    callState: {
-                                        offer: JSON.stringify(pc.current.localDescription),
-                                        callingTo: friendProfile.uid,
-                                        callingFrom: user.uid,
-                                        status: "ringing",
-                                        type: "audio",
-                                        timestamp: serverTimestamp(),
-                                    },
-                                    lastMessage: serverTimestamp()
-                                }).then((data) => {
-                                    setCall(pre => ({
-                                        ...pre,
-                                        calling: true,
-                                        type: "audio",
-                                        reciever: friendProfile,
-                                        chatId: inbox.chatId,
-                                        sender: user
-                                    }))
-                                })
-                                // }
+                                let lcD = null;
+                                pc.current.onicecandidate = e => {
+                                    lcD = pc.current.localDescription;
+                                }
+                                setTimeout(() => {
+                                    updateDoc(doc(getFirestore(), "chats", inbox.chatId), {
+                                        callState: {
+                                            offer: JSON.stringify(lcD),
+                                            callingTo: friendProfile.uid,
+                                            callingFrom: user.uid,
+                                            status: "ringing",
+                                            type: "audio",
+                                            timestamp: serverTimestamp(),
+                                        },
+                                        lastMessage: serverTimestamp()
+                                    }).then((data) => {
+                                        setCall(pre => ({
+                                            ...pre,
+                                            calling: true,
+                                            type: "audio",
+                                            reciever: friendProfile,
+                                            chatId: inbox.chatId,
+                                            sender: user
+                                        }))
+                                    })
+                                }, 2500)
                             }).catch(err => console.log("error in setLocalDescription ", err.message))
                         }).catch(err => console.log("error in create offer ", err.message))
                     }).finally(() => {

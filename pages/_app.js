@@ -36,9 +36,11 @@ function CallWrapper({ children }) {
     const { call } = useCall()
 
     return (
-        <div>
-            <AudioCall />
-            <div className={`${(call.calling||call.ringing)?"d-none":"d-block"} h-100`}>
+        <div className='h-100'>
+            <div className={`${(call.calling || call.ringing) ? "d-block" : "d-none"} h-100`}>
+                <AudioCall />
+            </div>
+            <div className={`${(call.calling || call.ringing) ? "d-none" : "d-block"} h-100`}>
                 {children}
             </div>
         </div>
