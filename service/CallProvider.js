@@ -171,16 +171,15 @@ export const CallProvider = ({ children }) => {
         }))
     }
 
-    function setMyTrack(type) {
-        if (window.navigator.mediaDevices) {
-            window.navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(stream => {
-                stream.getTracks().forEach(track => {
-                    pc.current.addTrack(track, stream)
-                });
-                return stream
-            }).catch(err => console.log("track ", err.message))
-        } else {
-            alert("window.navigator.mediaDevices error")
+    async function setMyTrack(type) {
+        try {
+            const stream = await window.navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+            stream.getTracks().forEach(track => {
+                pc.current.addTrack(track, stream)
+            });
+            return stream
+        } catch (error) {
+            console.log(error.message)
         }
     }
 
