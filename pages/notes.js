@@ -12,9 +12,9 @@ const Notes = () => {
 
     const searchNote = (e) => {
         const text = e.target.value
-        if (text.length>0) {
-            setNotes(notes.filter(note => (note.text.includes(text)||note.tag.includes(text))));
-        }else if(text.length === 0){
+        if (text.length > 0) {
+            setNotes(notes.filter(note => (note.text.includes(text) || note.tag.includes(text))));
+        } else if (text.length === 0) {
             setLoading(true)
         }
     }
@@ -30,7 +30,7 @@ const Notes = () => {
             })))
             setLoading(false)
         });
-    }, [user.uid,loading])
+    }, [user.uid, loading])
 
     const handleSubmit = (e) => {
         e.preventDefault()
@@ -48,11 +48,13 @@ const Notes = () => {
     }
 
     function deleteNote(id) {
-        deleteDoc(doc(getFirestore(), 'notes', user.uid, 'note', id)).then(res => {
-            console.log(res);
-        }).catch(err => {
-            console.log(err);
-        })
+        if (confirm("Are sure to Delete this note?")) {
+            deleteDoc(doc(getFirestore(), 'notes', user.uid, 'note', id)).then(res => {
+                console.log(res);
+            }).catch(err => {
+                console.log(err);
+            })
+        }
     }
 
     return (
@@ -61,7 +63,7 @@ const Notes = () => {
                 <button className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">Add Note</button>
                 <div className="row">
                     <div className="col">
-                        <input onChange={searchNote} type="text" className="form-control" placeholder='Search'/>
+                        <input onChange={searchNote} type="text" className="form-control" placeholder='Search' />
                     </div>
                 </div>
             </div>
@@ -69,13 +71,13 @@ const Notes = () => {
                 <div className="modal-dialog">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h5 className="modal-title" id="exampleModalLabel">Modal title</h5>
+                            <h5 className="modal-title" id="exampleModalLabel">Add Notes</h5>
                             <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <form onSubmit={handleSubmit} className="">
-                            <div className="modal-body d-flex gap-2 align-items-center">
-                                <input onChange={e => { setText(e.target.value) }} value={text} type="text" className="form-control" placeholder='add notes' />
-                                <input onChange={e => { setTag(e.target.value) }} value={tag} type="text" className="form-control" placeholder='tags via space' />
+                            <div className="modal-body">
+                                <input onChange={e => { setTag(e.target.value) }} value={tag} type="text" className="form-control mb-2" placeholder='Title' />
+                                <textarea onChange={e => { setText(e.target.value) }} className="form-control" placeholder='Details'>{text}</textarea>
                             </div>
                             <div className="modal-footer">
                                 <button type="reset" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
