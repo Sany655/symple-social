@@ -12,13 +12,16 @@ function Blog() {
     const [articles, setArticles] = useState([])
     const [input, setInput] = useState({
         title: "",
-        img: "",
+        img: {
+            url:"",
+            name:""
+        },
         text: "",
         loading: false,
         error: "",
     })
     const [disabled, setdisabled] = useState(true)
-    
+
     function articleWriting() {
         const pas = window.prompt("What is the password?")
         if (pas === process.env.REACT_APP_adminpass)
@@ -31,30 +34,37 @@ function Blog() {
         e.preventDefault();
         setInput({ ...input, loading: true })
         if (imgControl.current?.files[0]) {
-            const storage = getStorage();
-            const file = imgControl.current.files[0]
-            const storageRef = ref(storage, 'articles/' + file.name);
-            try {
-                const snapshot = await uploadBytes(storageRef, file)
-                try {
-                    const downloadURL = await getDownloadURL(snapshot.ref)
-                    writingArtic(downloadURL)
-                } catch (error) {
-                    setInput({ ...input, error: 'Error getting download URL: ' + error });
-                }
-            } catch (error) {
-                setInput({ ...input, error: 'Error uploading file: ' + error });
-            }
+            uploadfiles()
         } else {
             writingArtic()
         }
     }
 
-    function writingArtic(url="") {
+    async function uploadfiles() {
+        const storage = getStorage();
+        const file = imgControl.current.files[0]
+        const storageRef = ref(storage, 'articles/' + file.name);
+        try {
+            const snapshot = await uploadBytes(storageRef, file)
+            try {
+                const downloadURL = await getDownloadURL(snapshot.ref)
+                writingArtic(downloadURL,file.name)
+            } catch (error) {
+                setInput({ ...input, error: 'Error getting download URL: ' + error });
+            }
+        } catch (error) {
+            setInput({ ...input, error: 'Error uploading file: ' + error });
+        }
+    }
+
+    function writingArtic(url = "",fileName = "") {
         addDoc(collection(getFirestore(), "articles"), {
             title: input.title,
             text: input.text,
-            img:url,
+            img: {
+                url:url,
+                name:fileName
+            },
             datetime: serverTimestamp()
         })
             .then(async (article) => {
@@ -75,11 +85,6 @@ function Blog() {
                     article.id = doc.id
                     return article;
                 }))
-                console.log(snapshot.docs.map(doc => {
-                    const article = doc.data()
-                    article.id = doc.id
-                    return article;
-                }));
             })
     }, [])
 
@@ -125,7 +130,7 @@ function Blog() {
                             </button>
                         </div>
                         {
-                            articles.length?articles.map((article, index) => <SingleArticle key={index} article={article}/>):<Spinner />
+                            articles.length ? articles.map((article, index) => <SingleArticle key={index} article={article} />) : <Spinner />
                         }
                     </div>
                     <div className="col-md-4 p-4">
