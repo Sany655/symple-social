@@ -1,0 +1,25 @@
+.article-text {
+    white-space: pre-wrap;
+    font-family: monospace;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #f8f8f8;
+    overflow: hidden;
+    /* max-width: 400px; */
+    transition: max-height 0.5s ease-in-out;
+    max-height: 100px;
+    text-align: start;
+  }
+  
+  .article-text.expanded {
+    max-height: none;
+  }
+  
+  .load-more-btn {
+    margin-top: 10px;
+    border: none;
+    background-color: transparent;
+    color: blue;
+    cursor: pointer;
+  }
+  

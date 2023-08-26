@@ -1,7 +1,7 @@
-# symple-social
+# react-apps
+there is an app that includes so many app in branches
 
-* a simple social media app
-* signup using google or any mail account
-* some featers like calling under development
-
-[visit here](https://symple-social.vercel.app/)
+# symple social
+"site": "symplesocial", add in firebase.json file
+deploy with firebase deploy --only hosting:symplesocial
+[visit](https://symplesocial.web.app/)
