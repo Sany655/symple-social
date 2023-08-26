@@ -1,7 +1,3 @@
-# react-apps
-there is an app that includes so many app in branches
-
-# symple social
-"site": "symplesocial", add in firebase.json file
-deploy with firebase deploy --only hosting:symplesocial
-[visit](https://symplesocial.web.app/)
+# Symple social
+a blog plus social app including chat, audio and video call features. its a demo app!
+live site [visit here](https://symplesocial.web.app/)
