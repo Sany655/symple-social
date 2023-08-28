@@ -41,23 +41,17 @@ function SingleArticle({ article }) {
         }
     }
 
-    async function editarticle() {
-        console.log(article);
-    }
-
     return (
         <div className="card mb-3">
             <div className="card-header bg-primary text-light d-flex justify-content-between">
                 <h4>{article.title}</h4>
                 <div className="">
-                    {/* <button className='btn btn-outline-light me-2' onClick={editarticle}><i class="bi bi-pencil"></i></button> */}
                     <button className='btn btn-outline-light' onClick={deletearticle}><i className="bi bi-x-lg"></i></button>
                 </div>
             </div>
             <div className="card-body text-center">
                 {error && <p className='text-center text-danger'>{error}</p>}
-                {article.img.url && <img src={(article.img.url)} alt="" width="350rem" className='mb-4' />}
-                <div></div>
+                {article.img.url && <img src={(article.img.url)} alt="" className='card-img' />}
                 {expanded && (
                     <button className="load-more-btn" onClick={toggleExpanded}>
                         Load Less
