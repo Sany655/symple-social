@@ -3,8 +3,8 @@ import { useEffect } from 'react'
 import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRef } from 'react'
-import SingleArticle from '../components/SingleArticle';
-import Spinner from '../components/Spinner';
+import SingleArticle from '../../components/SingleArticle';
+import Spinner from '../../components/Spinner';
 
 function Blog() {
     const imgControl = useRef()
