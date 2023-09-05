@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useRef } from 'react'
-import SingleArticle from '../../components/SingleArticle';
+import SingleArticle from './SingleArticle';
 import Spinner from '../../components/Spinner';
 
 function Blog() {
@@ -102,7 +102,7 @@ function Blog() {
                                 <input onChange={e => setInput({ ...input, title: e.target.value })} type="text" className="form-control mb-2 " placeholder='Write the header' value={input.title} required />
                                 <div className="mb-3">
                                     <label htmlFor="formFile" className="form-label">Provide any file (optional)</label>
-                                    <input onChange={e => setInput({ ...input, img: e.target.files[0] })} className="form-control" type="file" id="formFile" accept='image/*' ref={imgControl} />
+                                    <input className="form-control" type="file" id="formFile" accept='image/*' ref={imgControl} />
                                 </div>
                                 <textarea onChange={e => setInput({ ...input, text: e.target.value })} value={input.text} className='form-control' rows="4" placeholder='Write the article' required></textarea>
                             </div>
