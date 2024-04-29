@@ -42,22 +42,23 @@ function FileShare() {
     async function askingPass() {
         setlist([])
         if (prompt("Password") === process.env.REACT_APP_adminpass) {
-            try {
-                const storage = getStorage();
-                const storageRef = ref(storage, 'file-sharing/');
-                listAll(storageRef).then((res) => {
-                    setlist(res.items)
-                }).catch((error) => {
-                    console.log(error);
-                });
-            } catch (error) {
+        try {
+            const storage = getStorage(app);
+            const storageRef = ref(storage, 'file-sharing/');
+            listAll(storageRef).then((res) => {
+                setlist(res.items)
+                console.log(res);
+            }).catch((error) => {
                 console.log(error);
-            }
+            });
+        } catch (error) {
+            console.log(error);
+        }
         }
     }
 
     async function deleteItem(path) {
-        const storage = getStorage();
+        const storage = getStorage(app);
         const desertRef = ref(storage, path);
         deleteObject(desertRef).then(() => {
             setlist(list.filter(item => item.fullPath != path))
@@ -66,6 +67,17 @@ function FileShare() {
         });
     }
 
+    async function copydownloadlink(path) {
+        const storage = getStorage(app);
+        const fileRef = ref(storage, path);
+        const link = await getDownloadURL(fileRef)
+        console.log(link);
+        navigator.clipboard.writeText(link).then(() => {
+            alert('Text copied to clipboard');
+        }, (err) => {
+            console.error('Error copying text to clipboard', err);
+        });
+    }
 
     return (
         <>
@@ -81,7 +93,6 @@ function FileShare() {
                                         <span className="visually-hidden">Loading...</span>
                                     </div> : "Submit"}
                             </button>
-                            <p>Files will be deleted after 24 hours</p>
                         </div>
                         <p className={`text-danger my-2`}>{eror && eror}</p>
                     </div>
@@ -93,16 +104,16 @@ function FileShare() {
                         <ul className="list-group">
                             {list.map((item, index) => <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
                                 <p className='m-0'>{item.name}</p>
-                                <button className='btn btn-sm btn-danger' onClick={() => deleteItem(item.fullPath)}><i className="bi bi-x"></i></button>
+                                <div>
+                                    <button className='btn btn-sm btn-danger me-2' onClick={() => deleteItem(item.fullPath)}><i className="bi bi-x"></i></button>
+                                    <button className='btn btn-sm btn-primary' onClick={() => copydownloadlink(item.fullPath)}><i className="bi bi-clipboard"></i></button>
+                                </div>
                             </li>)}
                         </ul>
                     </div>
                 </div>
             }
         </>
-        // https://firebasestorage.googleapis.com/v0/b/todo-39878.appspot.com/o/file-sharing%2Fdua.jpg?alt=media&token=4a7dfa2e-c95e-4497-8c81-901470ef258a
-        //https://firebasestorage.googleapis.com/v0/b/todo-39878.appspot.com/o/file-sharing%2Falgo%20lab%20repo.pdf?alt=media&token=19d7cb26-0f3f-4f4b-bb55-02baa61f67e2
-        // https://firebasestorage.googleapis.com/v0/b/todo-39878.appspot.com/o/file-sharing%2Falgo%20lab%20repo.docx?alt=media&token=dd858372-1444-4417-9f38-e490e6aeb1a8
     )
 }
 
