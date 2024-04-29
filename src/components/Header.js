@@ -35,6 +35,9 @@ const Header = () => {
                                 ) : (
                                     <>
                                         <li className="nav-item">
+                                            <NavLink to={"/share-file"} className="nav-link">Share File</NavLink>
+                                        </li>
+                                        <li className="nav-item">
                                             <NavLink to={"/register"} className="nav-link">Register</NavLink>
                                         </li>
                                         <li className="nav-item">
