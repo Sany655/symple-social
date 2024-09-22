@@ -13,22 +13,15 @@ function Blog() {
     const [input, setInput] = useState({
         title: "",
         img: {
-            url:"",
-            name:""
+            url: "",
+            name: ""
         },
         text: "",
         loading: false,
         error: "",
     })
     const [disabled, setdisabled] = useState(true)
-
-    function articleWriting() {
-        const pas = window.prompt("What is the password?")
-        if (pas === process.env.REACT_APP_adminpass)
-            setdisabled(false)
-        else
-            alert("Mail you article on this email address mazharulalam26@gmail.com")
-    }
+    const [adminLogin, setAdminLogin] = useState(false)
 
     const submitArticle = async e => {
         e.preventDefault();
@@ -48,7 +41,7 @@ function Blog() {
             const snapshot = await uploadBytes(storageRef, file)
             try {
                 const downloadURL = await getDownloadURL(snapshot.ref)
-                writingArtic(downloadURL,file.name)
+                writingArtic(downloadURL, file.name)
             } catch (error) {
                 setInput({ ...input, error: 'Error getting download URL: ' + error });
             }
@@ -57,13 +50,13 @@ function Blog() {
         }
     }
 
-    function writingArtic(url = "",fileName = "") {
+    function writingArtic(url = "", fileName = "") {
         addDoc(collection(getFirestore(), "articles"), {
             title: input.title,
             text: input.text,
             img: {
-                url:url,
-                name:fileName
+                url: url,
+                name: fileName
             },
             datetime: serverTimestamp()
         })
@@ -124,10 +117,30 @@ function Blog() {
             <div className="container">
                 <div className="row">
                     <div className="col-md-8 p-4">
-                        <div className="d-grid mb-3" onDoubleClick={articleWriting}>
+                        <div className="d-grid mb-3" onDoubleClick={() => setAdminLogin(true)}>
                             <button type="button" className="btn btn-primary btn-block" data-bs-toggle="modal" data-bs-target="#exampleModal" disabled={disabled}>
                                 Write an article
                             </button>
+                            {
+                                adminLogin && <div className="card mt-4">
+                                    <div className="card-body">
+                                        <form className="d-flex gap-2" onSubmit={e => {
+                                            e.preventDefault();
+                                            const pass = e.target.pass.value;
+                                            if (pass === process.env.REACT_APP_adminpass) {
+                                                e.currentTarget.reset();
+                                                setdisabled(false)
+                                                setAdminLogin(false)
+                                            }else{
+                                                alert('Invalid Password')
+                                            }
+                                        }}>
+                                            <input type="password" name="pass" id="" placeholder='Admin Password' className='form-control' />
+                                            <button className="btn btn-primary">Login</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
                         </div>
                         {
                             articles.length ? articles.map((article, index) => <SingleArticle key={index} article={article} />) : <Spinner />
@@ -148,7 +161,7 @@ function Blog() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
             {/* <footer className="bg-primary pt-4 text-light">
                 <div className="container">
                     <div className="row">

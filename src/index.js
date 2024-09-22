@@ -15,6 +15,7 @@ import Inbox from './page/inbox';
 import People from './page/people';
 import Blog from './page/Blog/Blog';
 import FileShare from './page/FileSharing/FileShare';
+import Intelligence from './page/my-intelligence/Intelligence';
 // import "bootstrap/dist/js/bootstrap.bundle";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -60,6 +61,10 @@ const router = createBrowserRouter([
             {
                 path: "/share-file",
                 element: <Public><FileShare /></Public>
+            },
+            {
+                path: "/my-intelligence",
+                element: <Public><Intelligence /></Public>
             },
         ],
     },
