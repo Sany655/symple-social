@@ -53,7 +53,8 @@ function SingleArticle({ article }) {
         }
     }
 
-    return editPostState ? <EditBlog setEditPostState={setEditPostState} article={article} /> : (
+    return editPostState ? <EditBlog setEditPostState={setEditPostState} article={article} /> : 
+    (
         <div className="card mb-3">
             <div className="card-header bg-primary text-light d-flex justify-content-between">
                 <h4>{article.title}</h4>
@@ -71,7 +72,7 @@ function SingleArticle({ article }) {
                         Load Less
                     </button>
                 )}
-                {article.text && <pre className={`article-text ${expanded ? 'expanded' : ''}`} style={{}}>{article.text}</pre>}
+                {article.text && <pre className={`article-text ${expanded ? 'expanded' : ''}`} style={{}}>{article.text} <br /><br /><br /> {new Date(article.datetime.seconds * 1000).toLocaleString('en-US', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).replace(',', ' -').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$2:$1:$3')}</pre>}
                 {!expanded && (
                     <button className="load-more-btn" onClick={toggleExpanded}>
                         Load More
