@@ -16,6 +16,7 @@ import People from './page/people';
 import Blog from './page/Blog/Blog';
 import FileShare from './page/FileSharing/FileShare';
 import Intelligence from './page/my-intelligence/Intelligence';
+import Todo from './page/todo';
 // import "bootstrap/dist/js/bootstrap.bundle";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
             {
                 path: "/notes",
                 element: <Protected><Notes /></Protected>,
+            },
+            {
+                path: "/todo",
+                element: <Protected><Todo /></Protected>,
             },
             {
                 path: "/friend",
