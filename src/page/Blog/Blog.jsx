@@ -1,193 +1,361 @@
-import React, { useState } from 'react'
-import { useEffect } from 'react'
-import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
+import React, { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { addDoc, collection, getFirestore, query, orderBy, serverTimestamp, limit, getDocs, startAfter, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { useRef } from 'react'
 import SingleArticle from './SingleArticle';
 import Spinner from '../../components/Spinner';
+import aiRequest from '../../service/aiRequest';
 
 function Blog() {
-    const imgControl = useRef()
-    const closeBTN = useRef()
-    const [articles, setArticles] = useState([])
-    const [input, setInput] = useState({
-        title: "",
-        img: {
-            url: "",
-            name: ""
-        },
-        text: "",
+    // Constants
+    const ARTICLES_PER_PAGE = 5;
+
+    // Refs
+    const imgControl = useRef(null);
+    const closeBtn = useRef(null);
+
+    // URL Params
+    const [searchParams, setSearchParams] = useSearchParams();
+    const currentPage = parseInt(searchParams.get('page') || '1');
+
+    // States
+    const [articles, setArticles] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const [formData, setFormData] = useState({
+        title: '',
+        text: '',
+        img: { url: '', name: '' },
         loading: false,
-        error: "",
-    })
-    const [disabled, setdisabled] = useState(true)
-    const [adminLogin, setAdminLogin] = useState(false)
+        error: ''
+    });
+    const [aiWriteLoading, setAiWriteLoading] = useState(false)
 
-    const submitArticle = async e => {
-        e.preventDefault();
-        setInput({ ...input, loading: true })
-        if (imgControl.current?.files[0]) {
-            uploadfiles()
-        } else {
-            writingArtic()
-        }
-    }
-
-    async function uploadfiles() {
-        const storage = getStorage();
-        const file = imgControl.current.files[0]
-        const storageRef = ref(storage, 'articles/' + file.name);
+    const rephraseWithAi = async () => {
+        setAiWriteLoading(true);
         try {
-            const snapshot = await uploadBytes(storageRef, file)
-            try {
-                const downloadURL = await getDownloadURL(snapshot.ref)
-                writingArtic(downloadURL, file.name)
-            } catch (error) {
-                setInput({ ...input, error: 'Error getting download URL: ' + error });
-            }
+            const response = await aiRequest(formData.text);
+            setFormData(prev => ({ ...prev, text: response }));
         } catch (error) {
-            setInput({ ...input, error: 'Error uploading file: ' + error });
+            setFormData(prev => ({ ...prev, error: 'Error rephrasing text: ' + error.message }));
+        } finally {
+            setAiWriteLoading(false);
         }
+
     }
 
-    function writingArtic(url = "", fileName = "") {
-        addDoc(collection(getFirestore(), "articles"), {
-            title: input.title,
-            text: input.text,
-            img: {
-                url: url,
-                name: fileName
-            },
-            datetime: serverTimestamp()
-        })
-            .then(async (article) => {
+    // Fetch articles
+    const fetchArticles = async () => {
+        setIsLoading(true);
+        try {
+            const db = getFirestore();
+            const articlesRef = collection(db, 'articles');
 
-            })
-            .catch(err => setInput({ ...input, error: err.message }))
-            .finally(() => {
-                setInput({ ...input, loading: false })
-                closeBTN.current.click();
-            })
-    }
+            // Get total count and set up real-time listener
+            onSnapshot(query(articlesRef), (snapshot) => {
+                const total = snapshot.size;
+                setTotalPages(Math.ceil(total / ARTICLES_PER_PAGE));
+            });
+
+            // Set up real-time listener for paginated articles
+            const q = query(
+                articlesRef,
+                orderBy('datetime', 'desc'),
+                limit(ARTICLES_PER_PAGE * currentPage)
+            );
+
+            onSnapshot(q, (snapshot) => {
+                const fetchedArticles = snapshot.docs
+                    .slice((currentPage - 1) * ARTICLES_PER_PAGE)
+                    .map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    }));
+                setArticles(fetchedArticles);
+            });
+        } catch (error) {
+            alert('Error fetching articles: ' + error.message);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        onSnapshot(query(collection(getFirestore(), "articles"), orderBy('datetime', 'desc')),
-            snapshot => {
-                setArticles(snapshot.docs.map(doc => {
-                    const article = doc.data()
-                    article.id = doc.id
-                    return article;
-                }))
-            })
-    }, [])
+        fetchArticles();
+    }, [currentPage]);
+
+    // Handle article submission
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setFormData(prev => ({ ...prev, loading: true }));
+
+        try {
+            if (imgControl.current?.files[0]) {
+                await handleImageUpload();
+            } else {
+                await saveArticle();
+            }
+        } catch (error) {
+            setFormData(prev => ({ ...prev, error: error.message }));
+        }
+    };
+
+    // Handle image upload
+    const handleImageUpload = async () => {
+        const file = imgControl.current.files[0];
+        const storage = getStorage();
+        const fileName = Date.now() + '-' + file.name.replace(/\s+/g, '-').toLowerCase();
+        const storageRef = ref(storage, `articles/${fileName}`);
+        setFormData(prev => ({ ...prev, loading: true, error: '' }));
+
+        try {
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            await saveArticle(downloadURL, fileName);
+        } catch (error) {
+            throw new Error('Error uploading image: ' + error.message);
+        }
+    };
+
+    // Save article to Firestore
+    const saveArticle = async (imageUrl = '', fileName = '') => {
+        try {
+            const articleData = {
+                title: formData.title,
+                text: formData.text,
+                img: { url: imageUrl, name: fileName },
+                datetime: serverTimestamp()
+            };
+
+            await addDoc(collection(getFirestore(), 'articles'), articleData);
+            alert('Article published successfully!');
+            fetchArticles();
+            setFormData(prev => ({ ...prev, loading: false, error: '' }));
+            resetForm();
+        } catch (error) {
+            throw new Error('Error saving article: ' + error.message);
+        }
+    };
+
+    // Reset form
+    const resetForm = () => {
+        setFormData({
+            title: '',
+            text: '',
+            img: { url: '', name: '' },
+            loading: false,
+            error: ''
+        });
+        if (imgControl.current) imgControl.current.value = '';
+        if (closeBtn.current) closeBtn.current.click();
+    };
 
     return (
-        <>
-            <div className="modal fade" id="exampleModal" tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div className="modal-dialog">
+        <div className="container py-4">
+            {/* Login Modal */}
+            <div className="modal fade" id="loginModal" tabIndex="-1">
+                <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h1 className="modal-title fs-5" id="exampleModalLabel">Article</h1>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            <h5 className="modal-title">Admin Login</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <form method="post" onSubmit={submitArticle}>
+                        <div className="modal-body">
+                            <form onSubmit={e => {
+                                e.preventDefault();
+                                const password = e.target.password.value;
+                                if (password === process.env.REACT_APP_adminpass) {
+                                    setIsAdmin(true);
+                                    document.querySelector('#loginModalbtn').click();
+                                    alert('Logged in as admin');
+                                } else {
+                                    alert('Invalid password');
+                                }
+                                e.target.reset();
+                            }}>
+                                <input
+                                    type="password"
+                                    className="form-control"
+                                    name="password"
+                                    placeholder="Enter admin password"
+                                    required
+                                    autoComplete="off"
+                                />
+                            </form>
+                            <button className="d-none" type="button" data-bs-dismiss="modal" id="loginModalbtn"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {/* Article Modal */}
+            <div className="modal fade" id="articleModal" tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Write an Article</h5>
+                            <button type="button" className="btn-close" data-bs-dismiss="modal" ref={closeBtn}></button>
+                        </div>
+                        <form onSubmit={handleSubmit}>
                             <div className="modal-body">
-                                <input onChange={e => setInput({ ...input, title: e.target.value })} type="text" className="form-control mb-2 " placeholder='Write the header' value={input.title} required />
+                                {formData.error && (
+                                    <div className="alert alert-danger">{formData.error}</div>
+                                )}
                                 <div className="mb-3">
-                                    <label htmlFor="formFile" className="form-label">Provide any file (optional)</label>
-                                    <input className="form-control" type="file" id="formFile" accept='image/*' ref={imgControl} />
+                                    <label htmlFor="title" className="form-label">Title</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        id="title"
+                                        value={formData.title}
+                                        onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                                        required
+                                    />
                                 </div>
-                                <textarea onChange={e => setInput({ ...input, text: e.target.value })} value={input.text} className='form-control' rows="4" placeholder='Write the article' required></textarea>
+                                <div className="mb-3">
+                                    <label htmlFor="content" className="form-label">Content</label>
+                                    <div className="position-relative">
+                                        <textarea
+                                            className="form-control"
+                                            id="content"
+                                            rows="10"
+                                            value={formData.text}
+                                            onChange={e => setFormData(prev => ({ ...prev, text: e.target.value }))}
+                                            required
+                                        ></textarea>
+                                        {aiWriteLoading ? (
+                                            <div className="position-absolute translate-middle" style={{ bottom: '15px', right: '15px'}}>
+                                                <div className="spinner-border" role="status">
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </div>
+                                            </div>
+                                        ) : <i className={"bi bi-arrow-repeat position-absolute fs-2"} style={{
+                                            cursor: 'pointer', bottom: '15px', right: '15px'}} onClick={rephraseWithAi}></i>}
+                                    </div>
+                                </div>
+                                <div className="mb-3">
+                                    <label htmlFor="image" className="form-label">Image (optional)</label>
+                                    <input
+                                        type="file"
+                                        className="form-control"
+                                        id="image"
+                                        accept="image/*"
+                                        ref={imgControl}
+                                    />
+                                </div>
                             </div>
                             <div className="modal-footer">
-                                {input.error && <p className='text-danger'>{input.error}</p>}
-                                <button ref={closeBTN} type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={() => {
-                                    setInput({ title: "", img: null, text: "", loading: false, error: "" })
-                                    imgControl.current.value = null;
-                                }}>Close</button>
-                                <button className="btn btn-primary" type="submit" disabled={input.loading}>
-                                    Post
-                                    {input.loading && <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>}
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    data-bs-dismiss="modal"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary"
+                                    disabled={formData.loading}
+                                >
+                                    {formData.loading ? (
+                                        <>
+                                            <span className="spinner-border spinner-border-sm me-2"></span>
+                                            Publishing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="bi bi-send me-2"></i>
+                                            Publish
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            <div className="container">
-                <div className="row">
-                    <div className="col-md-8 p-4">
-                        <div className="d-grid mb-3" onDoubleClick={() => setAdminLogin(true)}>
-                            <button type="button" className="btn btn-primary btn-block" data-bs-toggle="modal" data-bs-target="#exampleModal" disabled={disabled}>
-                                Write an article
-                            </button>
-                            {
-                                adminLogin && <div className="card mt-4">
-                                    <div className="card-body">
-                                        <form className="d-flex gap-2" onSubmit={e => {
-                                            e.preventDefault();
-                                            const pass = e.target.pass.value;
-                                            if (pass === process.env.REACT_APP_adminpass) {
-                                                e.currentTarget.reset();
-                                                setdisabled(false)
-                                                setAdminLogin(false)
-                                            }else{
-                                                alert('Invalid Password')
-                                            }
-                                        }}>
-                                            <input type="password" name="pass" id="" placeholder='Admin Password' className='form-control' />
-                                            <button className="btn btn-primary">Login</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                        {
-                            articles.length ? articles.map((article, index) => <SingleArticle key={index} article={article} />) : <Spinner />
-                        }
-                    </div>
-                    <div className="col-md-4 p-4">
-                        <div className="card">
-                            <div className="card-header bg-primary text-light">
-                                <h5>Latest Articles</h5>
-                            </div>
-                            <ul className='list-group'>
-                            </ul>
-                        </div>
-                        <div className="card mt-2">
-                            <div className="card-header bg-primary text-light">
-                                <h5>Top Aricles</h5>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div >
-            {/* <footer className="bg-primary pt-4 text-light">
-                <div className="container">
-                    <div className="row">
+            {/* Write Article Button */}
+            <div className="text-end mb-4">
+                {isAdmin ? (
+                    <button
+                        className="btn btn-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#articleModal"
+                    >
+                        <i className="bi bi-pencil-square me-2"></i>
+                        Write an Article
+                    </button>
+                ) : (
+                    <button
+                        className="btn btn-outline-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#loginModal"
+                    >
+                        <i className="bi bi-lock me-2"></i>
+                        Login to Write
+                    </button>
+                )}
+            </div>
 
-                        <div className="col-4">
-                            <h4>Partners</h4>
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWvo20hLfiJnfnW5fvZi3-LhW-BL8uXP-FnxfMmmC1&s" width={100} alt="" />
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWvo20hLfiJnfnW5fvZi3-LhW-BL8uXP-FnxfMmmC1&s" width={100} alt="" />
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWvo20hLfiJnfnW5fvZi3-LhW-BL8uXP-FnxfMmmC1&s" width={100} alt="" />
-                        </div>
-                        <div className="col-4">
-                            <h5>Important Links</h5>
-                            <ul className=''>
-                                <li className=''>articles no 1</li>
-                                <li className=''>articles no 2</li>
-                                <li className=''>articles no 3</li>
-                            </ul>
-                        </div>
-                        <div className="col-4">
-                            <img className='text-light' width={"150px"} src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/QR_code_for_mobile_English_Wikipedia.svg/1200px-QR_code_for_mobile_English_Wikipedia.svg.png" alt="" />
-                        </div>
-                    </div>
+            {/* Articles List */}
+            {isLoading ? (
+                <div className="text-center py-4">
+                    <Spinner />
                 </div>
-            </footer> */}
-        </>
-    )
+            ) : articles.length > 0 ? (
+                <>
+                    <div className="row">
+                        {articles.map(article => (
+                            <SingleArticle
+                                key={article.id}
+                                article={article}
+                                isAdmin={isAdmin}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    <nav className="mt-4" onClick={() => window.scrollTo(0, 0)}>
+                        <ul className="pagination justify-content-center">
+                            <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                                <button
+                                    className="page-link"
+                                    onClick={() => setSearchParams({ page: (currentPage - 1).toString() })}
+                                >
+                                    Previous
+                                </button>
+                            </li>
+                            {[...Array(totalPages)].map((_, i) => (
+                                <li
+                                    key={i + 1}
+                                    className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}
+                                >
+                                    <button
+                                        className="page-link"
+                                        onClick={() => setSearchParams({ page: (i + 1).toString() })}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                </li>
+                            ))}
+                            <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                                <button
+                                    className="page-link"
+                                    onClick={() => setSearchParams({ page: (currentPage + 1).toString() })}
+                                >
+                                    Next
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </>
+            ) : (
+                <div className="text-center py-4">
+                    <p className="text-muted">No articles found</p>
+                </div>
+            )}
+        </div>
+    );
 }
 
-export default Blog
+export default Blog;

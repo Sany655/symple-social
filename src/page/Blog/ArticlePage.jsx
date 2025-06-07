@@ -127,7 +127,7 @@ function ArticlePage() {
                     )}
 
                     <div className="article-content">
-                        <pre className="lh-lg fs-5">
+                        <pre className="lh-lg fs-5 overflow-auto" style={{ whiteSpace: 'pre-wrap' }}>
                             {article.text}
                         </pre>
                     </div>

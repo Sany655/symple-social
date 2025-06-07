@@ -32,7 +32,8 @@ function EditBlog({ article, setEditPostState }) {
     async function uploadfiles() {
         const storage = getStorage();
         const file = imgControl.current.files[0]
-        const storageRef = ref(storage, 'articles/' + file.name);
+        const fileName = Date.now()+'-'+file.name.replace(/\s+/g, '-').toLowerCase();
+        const storageRef = ref(storage, 'articles/' + fileName);
         try {
             const snapshot = await uploadBytes(storageRef, file)
             try {
@@ -41,7 +42,7 @@ function EditBlog({ article, setEditPostState }) {
                     if (article.img.name) {
                         await deleteObject(ref(getStorage(), 'articles/' + article.img.name))
                     }
-                    return { url: downloadURL, name: file.name }
+                    return { url: downloadURL, name: fileName }
                 } catch (error) {
                     setInput(pre => ({ ...pre, error: error.message }))
                 }

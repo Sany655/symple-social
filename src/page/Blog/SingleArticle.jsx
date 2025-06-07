@@ -14,6 +14,7 @@ function SingleArticle({ article }) {
     };
 
     async function deleteImage() {
+        alert(article.id)
         try {
             await deleteObject(ref(getStorage(), 'articles/' + article.img.name))
             deletearticle();
@@ -63,21 +64,17 @@ function SingleArticle({ article }) {
                             <i className="bi bi-three-dots-vertical"></i>
                         </button>
                         <ul className="dropdown-menu">
-                            <li>
-                                <button className="dropdown-item" onClick={() => confirmation("edit")}>
-                                    <i className="bi bi-pencil-fill me-2"></i>Edit
-                                </button>
+                            <li className="dropdown-item" style={{ cursor: 'pointer' }} onClick={() => confirmation("edit")}>
+                                <i className="bi bi-pencil-fill me-2"></i>Edit
                             </li>
-                            <li>
-                                <button className="dropdown-item text-danger" onClick={() => confirmation("delete")}>
-                                    <i className="bi bi-x-lg me-2"></i>Delete
-                                </button>
+                            <li className="dropdown-item text-danger" style={{ cursor: 'pointer' }} onClick={() => confirmation("delete")}>
+                                <i className="bi bi-x-lg me-2"></i>Delete
                             </li>
                         </ul>
                     </div>
                 </div>
                 <small className="text-muted">
-                    {new Date(article.datetime.seconds * 1000).toLocaleString('en-US', {
+                    {new Date(article.datetime?.seconds * 1000).toLocaleString('en-US', {
                         day: '2-digit',
                         month: 'long',
                         year: 'numeric',
@@ -102,12 +99,12 @@ function SingleArticle({ article }) {
                 </pre>
 
                 <div className="d-flex gap-2">
-                    <button
+                    {/* <button
                         className="btn btn-link p-0"
                         onClick={toggleExpanded}
                     >
                         {expanded ? 'Hide' : 'Expand'}
-                    </button>
+                    </button> */}
                     <Link to={`/blog/${article.id}`} className="">See More</Link>
                 </div>
             </div>

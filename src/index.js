@@ -19,6 +19,7 @@ import Intelligence from './page/my-intelligence/Intelligence';
 import Todo from './page/todo';
 // import "bootstrap/dist/js/bootstrap.bundle";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import ArticlePage from './page/Blog/ArticlePage';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
             {
                 path: "/",
                 element: <Blog />,
+            },
+            {
+                path: "/blog/:id",
+                element: <ArticlePage />,
             },
             {
                 path: "/feed",
@@ -68,10 +73,10 @@ const router = createBrowserRouter([
                 path: "/share-file",
                 element: <Public><FileShare /></Public>
             },
-            {
-                path: "/my-intelligence",
-                element: <Public><Intelligence /></Public>
-            },
+            // {
+            //     path: "/my-intelligence",
+            //     element: <Public><Intelligence /></Public>
+            // },
         ],
     },
 ]);
