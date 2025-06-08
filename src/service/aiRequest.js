@@ -1,9 +1,6 @@
-import { InferenceClient } from "@huggingface/inference";
-import { OpenAI } from "openai";
 import { Groq } from 'groq-sdk';
 
 async function aiRequest(prompt) {
-    // const groq = new Groq({ apiKey: "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", dangerouslyAllowBrowser: true });
     const groq = new Groq({ apiKey: process.env.REACT_APP_AI_KEY, dangerouslyAllowBrowser: true });
 
     const chatCompletion = await groq.chat.completions.create({
