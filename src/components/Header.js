@@ -50,10 +50,10 @@ const Header = () => {
                                 )
                             }
                         </ul>
-                        <form className="d-flex me-2" onSubmit={e => e.preventDefault()}>
+                        {/* <form className="d-flex me-2" onSubmit={e => e.preventDefault()}>
                             <input className="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
                             <button className="btn btn-outline-light">Search</button>
-                        </form>
+                        </form> */}
                         {
                             user && <div className='dropdown'>
                                 <a className="nav-link" href="#" id="dropdownMenuButton1" role="button" data-bs-toggle="dropdown" aria-expanded="false">

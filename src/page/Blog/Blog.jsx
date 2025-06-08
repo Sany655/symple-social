@@ -34,11 +34,17 @@ function Blog() {
 
     const rephraseWithAi = async () => {
         setAiWriteLoading(true);
+        setFormData(prev => ({ ...prev, error: '' }));
+        if (!formData.text) {
+            setFormData(prev => ({ ...prev, error: 'Please enter some text to rephrase.' }));
+            setAiWriteLoading(false);
+            return;
+        }
         try {
-            const response = await aiRequest(formData.text);
-            setFormData(prev => ({ ...prev, text: response }));
+            const aiResponse = await aiRequest(formData.text);
+            setFormData(prev => ({ ...prev, text: aiResponse || prev.text }));
         } catch (error) {
-            setFormData(prev => ({ ...prev, error: 'Error rephrasing text: ' + error.message }));
+            setFormData(prev => ({ ...prev, error: 'Error rephrasing text: ' + error.message + ' ' + error.stack }));
         } finally {
             setAiWriteLoading(false);
         }
@@ -180,7 +186,8 @@ function Blog() {
                                     name="password"
                                     placeholder="Enter admin password"
                                     required
-                                    autoComplete="off"
+                                    autoComplete="on"
+                                    autoFocus={true}
                                 />
                             </form>
                             <button className="d-none" type="button" data-bs-dismiss="modal" id="loginModalbtn"></button>
@@ -224,13 +231,14 @@ function Blog() {
                                             required
                                         ></textarea>
                                         {aiWriteLoading ? (
-                                            <div className="position-absolute translate-middle" style={{ bottom: '15px', right: '15px'}}>
+                                            <div className="position-absolute translate-middle" style={{ bottom: '15px', right: '15px' }}>
                                                 <div className="spinner-border" role="status">
                                                     <span className="visually-hidden">Loading...</span>
                                                 </div>
                                             </div>
                                         ) : <i className={"bi bi-arrow-repeat position-absolute fs-2"} style={{
-                                            cursor: 'pointer', bottom: '15px', right: '15px'}} onClick={rephraseWithAi}></i>}
+                                            cursor: 'pointer', bottom: '15px', right: '15px'
+                                        }} onClick={rephraseWithAi}></i>}
                                     </div>
                                 </div>
                                 <div className="mb-3">
@@ -274,86 +282,92 @@ function Blog() {
                     </div>
                 </div>
             </div>
-            {/* Write Article Button */}
-            <div className="text-end mb-4">
-                {isAdmin ? (
-                    <button
-                        className="btn btn-primary"
-                        data-bs-toggle="modal"
-                        data-bs-target="#articleModal"
-                    >
-                        <i className="bi bi-pencil-square me-2"></i>
-                        Write an Article
-                    </button>
-                ) : (
-                    <button
-                        className="btn btn-outline-primary"
-                        data-bs-toggle="modal"
-                        data-bs-target="#loginModal"
-                    >
-                        <i className="bi bi-lock me-2"></i>
-                        Login to Write
-                    </button>
-                )}
-            </div>
 
-            {/* Articles List */}
-            {isLoading ? (
-                <div className="text-center py-4">
-                    <Spinner />
-                </div>
-            ) : articles.length > 0 ? (
-                <>
-                    <div className="row">
-                        {articles.map(article => (
-                            <SingleArticle
-                                key={article.id}
-                                article={article}
-                                isAdmin={isAdmin}
-                            />
-                        ))}
+            <div className="row">
+                <div className="col-md-8 p-4">
+                    {/* Write Article Button */}
+                    <div className="text-end mb-4">
+                        {isAdmin ? (
+                            <button
+                                className="btn btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#articleModal"
+                            >
+                                <i className="bi bi-pencil-square me-2"></i>
+                                Write an Article
+                            </button>
+                        ) : (
+                            <button
+                                className="btn btn-outline-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#loginModal"
+                            >
+                                <i className="bi bi-lock me-2"></i>
+                                Login to Write
+                            </button>
+                        )}
                     </div>
 
-                    {/* Pagination */}
-                    <nav className="mt-4" onClick={() => window.scrollTo(0, 0)}>
-                        <ul className="pagination justify-content-center">
-                            <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
-                                <button
-                                    className="page-link"
-                                    onClick={() => setSearchParams({ page: (currentPage - 1).toString() })}
-                                >
-                                    Previous
-                                </button>
-                            </li>
-                            {[...Array(totalPages)].map((_, i) => (
-                                <li
-                                    key={i + 1}
-                                    className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}
-                                >
-                                    <button
-                                        className="page-link"
-                                        onClick={() => setSearchParams({ page: (i + 1).toString() })}
-                                    >
-                                        {i + 1}
-                                    </button>
-                                </li>
-                            ))}
-                            <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
-                                <button
-                                    className="page-link"
-                                    onClick={() => setSearchParams({ page: (currentPage + 1).toString() })}
-                                >
-                                    Next
-                                </button>
-                            </li>
-                        </ul>
-                    </nav>
-                </>
-            ) : (
-                <div className="text-center py-4">
-                    <p className="text-muted">No articles found</p>
+                    {/* Articles List */}
+                    {isLoading ? (
+                        <div className="text-center py-4">
+                            <Spinner />
+                        </div>
+                    ) : articles.length > 0 ? (
+                        <>
+                            <div className="row">
+                                {articles.map(article => (
+                                    <SingleArticle
+                                        key={article.id}
+                                        article={article}
+                                        isAdmin={isAdmin}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Pagination */}
+                            <nav className="mt-4" onClick={() => window.scrollTo(0, 0)}>
+                                <ul className="pagination pagination-sm justify-content-center">
+                                    <li className={`page-item ${currentPage <= 1 ? 'disabled' : ''}`}>
+                                        <button
+                                            className="page-link"
+                                            onClick={() => setSearchParams({ page: (currentPage - 1).toString() })}
+                                        >
+                                            Previous
+                                        </button>
+                                    </li>
+                                    {[...Array(totalPages)].map((_, i) => (
+                                        <li
+                                            key={i + 1}
+                                            className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}
+                                        >
+                                            <button
+                                                className="page-link"
+                                                onClick={() => setSearchParams({ page: (i + 1).toString() })}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        </li>
+                                    ))}
+                                    <li className={`page-item ${currentPage >= totalPages ? 'disabled' : ''}`}>
+                                        <button
+                                            className="page-link"
+                                            onClick={() => setSearchParams({ page: (currentPage + 1).toString() })}
+                                        >
+                                            Next
+                                        </button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </>
+                    ) : (
+                        <div className="text-center py-4">
+                            <p className="text-muted">No articles found</p>
+                        </div>
+                    )}
                 </div>
-            )}
+                <div className="d-none d-md-block col-md-4"></div>
+            </div>
         </div>
     );
 }

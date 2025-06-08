@@ -1,51 +1,31 @@
 import { InferenceClient } from "@huggingface/inference";
 import { OpenAI } from "openai";
+import { Groq } from 'groq-sdk';
 
 async function aiRequest(prompt) {
-    // const client = new InferenceClient(process.env.REACT_APP_HUGGINGFACE_API_KEY);
-    // const chatCompletion = await client.chatCompletion({
-    //     provider: "hyperbolic",
-    //     model: "deepseek-ai/DeepSeek-R1-0528",
-    //     messages: [
-    //         {
-    //             role: "user",
-    //             content: prompt,
-    //         },
-    //     ],
-    // });
-    // console.log(chatCompletion.choices[0].message);
-    // console.log(chatCompletion.choices[0]);
-    // console.log(chatCompletion);
+    // const groq = new Groq({ apiKey: "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", dangerouslyAllowBrowser: true });
+    const groq = new Groq({ apiKey: process.env.REACT_APP_AI_KEY, dangerouslyAllowBrowser: true });
 
-    // return chatCompletion.choices[0].message.content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-
-    const client = new OpenAI({
-        baseURL: "https://router.huggingface.co/novita/v3/openai",
-        apiKey: process.env.REACT_APP_HUGGINGFACE_API_KEY,
-    });
-
-    const chatCompletion = await client.chat.completions.create({
-        max_tokens: 1000,
-        model: "deepseek/deepseek-r1-0528",
-        messages: [
+    const chatCompletion = await groq.chat.completions.create({
+        "messages": [
             {
-                role: "system",
-                content: "You are a plain text assistant. Never use HTML tags, markdown, or headers like ### or <think>. Only return plain text explanations and Python code without formatting.",
+                "role": "system",
+                "content": "You are an intelligent html and blog assistant. You must follow these rules strictly and without exception. use HTML tags and do not use any other markdown formatting. provide explanations as said. Always include pre tag and different style with code to differentiate clearly and follow professional and academic styles. remember that the blog post has a header above it/externally. always remember to add responsive text styles"
             },
             {
-                role: "user",
-                content: "What is the capital of France?",
-            },
+                "role": "user",
+                "content": prompt
+            }
         ],
+        "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+        "temperature": 1,
+        // "max_completion_tokens": 1024,
+        "top_p": 1,
+        "stream": false,
+        "stop": null
     });
 
-    console.log(chatCompletion.choices[0].summary_text);
-    
-    return chatCompletion.choices[0].message.content.replace(/<think>[\s\S]*?<\/think>/gi, "")
-  .replace(/^#+\s.*$/gim, "") // remove markdown titles like ### Title
-  .replace(/[*_`>]/g, "") // remove markdown styling
-  .trim();
+    return chatCompletion.choices[0].message.content;
 }
 
 export default aiRequest;

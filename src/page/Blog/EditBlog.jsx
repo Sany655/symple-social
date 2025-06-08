@@ -1,9 +1,11 @@
 import { collection, doc, getFirestore, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage'
 import React, { useRef, useState } from 'react'
+import aiRequest from '../../service/aiRequest'
 
 function EditBlog({ article, setEditPostState }) {
     const imgControl = useRef(null)
+    const [aiWriteLoading, setAiWriteLoading] = useState(false)
     const [input, setInput] = useState({
         title: article.title,
         img: {
@@ -14,6 +16,25 @@ function EditBlog({ article, setEditPostState }) {
         loading: false,
         error: article.error,
     })
+
+    const rephraseWithAi = async () => {
+        setAiWriteLoading(true);
+        setInput(prev => ({ ...prev, error: '' }));
+        if (!input.text) {
+            setInput(prev => ({ ...prev, error: 'Please enter some text to rephrase.' }));
+            setAiWriteLoading(false);
+            return;
+        }
+        try {
+            const aiResponse = await aiRequest(input.text);
+            setInput(prev => ({ ...prev, text: aiResponse || prev.text }));
+        } catch (error) {
+            setInput(prev => ({ ...prev, error: 'Error rephrasing text: ' + error.message + ' ' + error.stack }));
+        } finally {
+            setAiWriteLoading(false);
+        }
+
+    }
 
     const submitArticle = async e => {
         e.preventDefault();
@@ -32,7 +53,7 @@ function EditBlog({ article, setEditPostState }) {
     async function uploadfiles() {
         const storage = getStorage();
         const file = imgControl.current.files[0]
-        const fileName = Date.now()+'-'+file.name.replace(/\s+/g, '-').toLowerCase();
+        const fileName = Date.now() + '-' + file.name.replace(/\s+/g, '-').toLowerCase();
         const storageRef = ref(storage, 'articles/' + fileName);
         try {
             const snapshot = await uploadBytes(storageRef, file)
@@ -88,7 +109,18 @@ function EditBlog({ article, setEditPostState }) {
                         <label htmlFor="formFile" className="form-label">Provide any file (optional)</label>
                         <input className="form-control" type="file" id="formFile" accept='image/*' ref={imgControl} />
                     </div>
-                    <textarea onChange={e => setInput({ ...input, text: e.target.value })} value={input.text} className='form-control mb-2' rows="4" placeholder='Write the article' required></textarea>
+                    <div className="position-relative">
+                        <textarea onChange={e => setInput({ ...input, text: e.target.value })} value={input.text} className='form-control mb-2' rows="4" placeholder='Write the article' required></textarea>
+                        {aiWriteLoading ? (
+                            <div className="position-absolute translate-middle" style={{ bottom: '15px', right: '15px' }}>
+                                <div className="spinner-border" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        ) : <i className={"bi bi-arrow-repeat position-absolute fs-2"} style={{
+                            cursor: 'pointer', bottom: '15px', right: '15px'
+                        }} onClick={rephraseWithAi}></i>}
+                    </div>
                     {input.error && <p className='text-danger'>{input.error}</p>}
                     <button type="button" className="btn btn-secondary me-2" onClick={() => {
                         setEditPostState(false)
