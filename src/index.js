@@ -17,9 +17,8 @@ import Blog from './page/Blog/Blog';
 import FileShare from './page/FileSharing/FileShare';
 import Intelligence from './page/my-intelligence/Intelligence';
 import Todo from './page/todo';
-// import "bootstrap/dist/js/bootstrap.bundle";
 import 'bootstrap-icons/font/bootstrap-icons.css';
-import ArticlePage from './page/Blog/ArticlePage';
+import BlogPage from './page/Blog/BlogPage';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -35,7 +34,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "/blog/:id",
-                element: <ArticlePage />,
+                element: <BlogPage />,
             },
             {
                 path: "/feed",

@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { addDoc, collection, getFirestore, query, orderBy, serverTimestamp, limit, getDocs, startAfter, onSnapshot } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import SingleArticle from './SingleArticle';
 import Spinner from '../../components/Spinner';
 import aiRequest from '../../service/aiRequest';
+import AdminLogin from '../../components/AdminLogin';
 
 function Blog() {
     // Constants
@@ -158,43 +158,16 @@ function Blog() {
     };
 
     return (
-        <div className="container py-4">
-            {/* Login Modal */}
-            <div className="modal fade" id="loginModal" tabIndex="-1">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Admin Login</h5>
-                            <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div className="modal-body">
-                            <form onSubmit={e => {
-                                e.preventDefault();
-                                const password = e.target.password.value;
-                                if (password === process.env.REACT_APP_adminpass) {
-                                    setIsAdmin(true);
-                                    document.querySelector('#loginModalbtn').click();
-                                    alert('Logged in as admin');
-                                } else {
-                                    alert('Invalid password');
-                                }
-                                e.target.reset();
-                            }}>
-                                <input
-                                    type="password"
-                                    className="form-control"
-                                    name="password"
-                                    placeholder="Enter admin password"
-                                    required
-                                    autoComplete="on"
-                                    autoFocus={true}
-                                />
-                            </form>
-                            <button className="d-none" type="button" data-bs-dismiss="modal" id="loginModalbtn"></button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div className="container pt-2 pb-4">
+            <AdminLogin
+                callback={({ success, actionType }) => {
+                    if (success) {
+                        setIsAdmin(true);
+                    }
+                }}
+                actionType="write"
+            />
+
             {/* Article Modal */}
             <div className="modal fade" id="articleModal" tabIndex="-1">
                 <div className="modal-dialog modal-lg">
@@ -286,7 +259,7 @@ function Blog() {
             <div className="row">
                 <div className="col-md-8 p-4">
                     {/* Write Article Button */}
-                    <div className="text-end mb-4">
+                    <div className="text-end">
                         {isAdmin ? (
                             <button
                                 className="btn btn-primary"
@@ -300,7 +273,7 @@ function Blog() {
                             <button
                                 className="btn btn-outline-primary"
                                 data-bs-toggle="modal"
-                                data-bs-target="#loginModal"
+                                data-bs-target="#adminLoginModal"
                             >
                                 <i className="bi bi-lock me-2"></i>
                                 Login to Write
@@ -316,12 +289,54 @@ function Blog() {
                     ) : articles.length > 0 ? (
                         <>
                             <div className="row">
-                                {articles.map(article => (
-                                    <SingleArticle
-                                        key={article.id}
-                                        article={article}
-                                        isAdmin={isAdmin}
-                                    />
+                                {articles.map((article, index) => (
+                                    <article className="container my-4 p-4 bg-white rounded shadow-sm" key={index}>
+                                        <header className="mb-4">
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <h1 className="display-6 display-md-4 display-lg-3 fw-bold mb-3 text-break"
+                                                    style={{
+                                                        textTransform: "capitalize",
+                                                        fontSize: "calc(1.2rem + 1.5vw)",
+                                                        lineHeight: "1.2"
+                                                    }}>
+                                                    <Link to={'blog/' + article.id} className='text-decoration-none text-dark'>{article.title}</Link>
+                                                </h1>
+                                            </div>
+                                            <small className="text-muted">
+                                                {new Date(article.datetime?.seconds * 1000).toLocaleString('en-US', {
+                                                    day: '2-digit',
+                                                    month: 'long',
+                                                    year: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    hour12: true
+                                                })}
+                                            </small>
+                                        </header>
+
+                                        {article.img.url && (
+                                            <div className="mb-4">
+                                                <img src={article.img.url} alt={article.title} className="img-fluid rounded" />
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <div style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 3,
+                                                WebkitBoxOrient: 'vertical',
+                                                whiteSpace: 'pre-wrap'
+                                            }}>
+                                                {article.text.replace(/<[^>]+>/g, '')}
+                                            </div>
+
+                                            <div className="d-flex gap-2">
+                                                <Link to={`/blog/${article.id}`} className="">See More</Link>
+                                            </div>
+                                        </div>
+                                    </article>
                                 ))}
                             </div>
 
