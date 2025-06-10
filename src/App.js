@@ -9,9 +9,16 @@ import Header from './components/Header';
 import AudioCall from './components/AudioCall';
 import store from "./redux/store";
 import app from "./firebase";
-import React from 'react'
+import React, { useEffect } from 'react'
 
 function App() {
+    useEffect(() => {
+        window.addEventListener('hide.bs.modal', () => {
+            if (document.activeElement instanceof HTMLElement) {
+                document.activeElement.blur();
+            }
+        });
+    }, [])
     return (
         <Provider store={store}>
             <StateChange>

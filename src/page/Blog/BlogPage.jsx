@@ -26,7 +26,7 @@ function BlogPage() {
     useEffect(() => {
         const docRef = doc(getFirestore(), "articles", id);
         onSnapshot(docRef, (doc) => {
-            if (doc.id) {
+            if (doc.data()) {
                 const artic = doc.data();
                 artic.id = doc?.id;
                 setArticle(artic);

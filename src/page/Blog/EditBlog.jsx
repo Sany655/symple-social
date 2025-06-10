@@ -88,13 +88,12 @@ function EditBlog({ article }) {
             modifiedAt: serverTimestamp()
         })
             .then(async (article) => {
-                console.log(article);
                 
             })
             .catch(err => setInput({ ...input, error: err.message }))
             .finally(() => {
                 setInput({ ...input, loading: false })
-                document.querySelector('button [data-bs-dismiss="modal"]').click()
+                document.querySelector('#closeModalButton').click()
             })
     }
 
@@ -149,7 +148,7 @@ function EditBlog({ article }) {
 
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" id='closeModalButton' onClick={e => e.target.blur()}>Close</button>
                                 <button className="btn btn-primary" type="submit" disabled={input.loading}>
                                     Update
                                     {input.loading && <span className="spinner-border spinner-border-sm" role="status" ></span>}

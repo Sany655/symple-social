@@ -1,14 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 function AdminLogin({ callback, actionType = '' }) {
-    const modalRef = useRef(null);
-
+    const closebtn = useRef(null)
     const handleSubmit = (e) => {
         e.preventDefault();
         const password = e.target.password.value;
         if (password === (process.env.NODE_ENV === 'production' ? process.env.REACT_APP_adminpass : ' ')) {
             callback({ success: true, actionType });
-            document.querySelector("#loginModalCloseBtn").click()
+            closebtn.current.click()
         } else {
             alert('Invalid password');
         }
@@ -19,9 +18,6 @@ function AdminLogin({ callback, actionType = '' }) {
         <div
             className="modal fade"
             id="adminLoginModal"
-            aria-labelledby="adminLoginModal"
-            aria-modal="true"
-            role="dialog"
         >
             <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content">
@@ -30,7 +26,6 @@ function AdminLogin({ callback, actionType = '' }) {
                             Admin Login
                             {actionType && ` - ${actionType.charAt(0).toUpperCase() + actionType.slice(1)}`}
                         </h5>
-                        <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <form onSubmit={handleSubmit}>
                         <div className="modal-body">
@@ -57,7 +52,7 @@ function AdminLogin({ callback, actionType = '' }) {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" ref={closebtn}>
                                 Cancel
                             </button>
                             <button type="submit" className="btn btn-primary">
