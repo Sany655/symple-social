@@ -2,6 +2,7 @@
 
 ### live site 
 [visit here](https://symplesocial.web.app/)
+<img width="922" height="597" alt="image" src="https://github.com/user-attachments/assets/cb8f7ebe-1060-45bf-9572-2bbbce5af1be" />
 
 A social networking web application built with React.js and Firebase, offering real-time features for productivity and community engagement.
 Key Features:
